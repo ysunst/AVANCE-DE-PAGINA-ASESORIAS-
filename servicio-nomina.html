@@ -3,10 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Servicios</title>
+    <title>Nómina y Seguridad Social</title>
+    <link rel="canonical" href="https://ysunst.github.io/AVANCE-DE-PAGINA-ASESORIAS-/servicio-nomina.html">
     <link rel="stylesheet" href="./styles/style.css">
-    <link rel="canonical" href="https://ysunst.github.io/AVANCE-DE-PAGINA-ASESORIAS-/servicios.html">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .servicio-detalle {
+            max-width: 1000px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+        }
+        .servicio-detalle__intro {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .servicio-detalle__intro h1 {
+            color: #179132;
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+        }
+        .servicio-detalle__intro p {
+            color: #444;
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .herramientas__grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+        }
+        .herramienta-card {
+            background: #f8fdfb;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .herramienta-card:not(.herramienta-card--proximamente):hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+        }
+        .herramienta-card i {
+            font-size: 2.5rem;
+            color: #179132;
+            margin-bottom: 1rem;
+        }
+        .herramienta-card h3 {
+            font-size: 1.3rem;
+            color: #1e7b97;
+            margin-bottom: 0.5rem;
+        }
+        .herramienta-card p {
+            color: #555;
+            font-size: 0.95rem;
+        }
+        .herramienta-card--proximamente {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .herramienta-card--proximamente i {
+            color: #999;
+        }
+        .badge-proximamente {
+            display: inline-block;
+            background: #eee;
+            color: #777;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+            margin-top: 0.5rem;
+        }
+    </style>
 </head>
 <body>
     <div class="floating-buttons">
@@ -42,67 +114,31 @@
         }
     </script>
 
-    <main class="servicios">
-        <h1 class="Presentacion__contenido__titulo">Servicios Profesionales</h1>
-        <div class="servicios__grid">
-            <div class="servicio">
-                <i class="fas fa-file-invoice-dollar"></i>
-                <h3>Contabilidad y Finanzas</h3>
-                <ul>
-                    <li>Elaboración de estados financieros</li>
-                    <li>Conciliación de cuentas</li>
-                    <li>Contabilidad general</li>
-                </ul>
-            </div>
+    <main class="servicio-detalle">
+        <div class="servicio-detalle__intro">
+            <h1><i class="fas fa-user-clock"></i> Nómina y Seguridad Social</h1>
+            <p>Liquidación de nómina, gestión de seguridad social y contratación laboral conforme a la normativa colombiana vigente. Usa las herramientas interactivas a continuación para hacer cálculos rápidos.</p>
+        </div>
 
-            <a href="servicio-nomina.html" class="servicio servicio--link">
-                <i class="fas fa-user-clock"></i>
-                <h3>Nómina y Seguridad Social</h3>
-                <ul>
-                    <li>Liquidación de nómina</li>
-                    <li>Gestión de seguridad social</li>
-                    <li>Contratación laboral</li>
-                </ul>
+        <div class="herramientas__grid">
+            <a href="calculadora-horas-extras.html" class="herramienta-card">
+                <i class="fas fa-clock"></i>
+                <h3>Calculadora de Horas Extras</h3>
+                <p>Calcula horas extra diurnas, nocturnas, dominicales y recargos según la normativa vigente 2026.</p>
             </a>
 
-            <div class="servicio">
-                <i class="fas fa-boxes"></i>
-                <h3>Inventarios y Activos</h3>
-                <ul>
-                    <li>Auditoría de inventarios</li>
-                    <li>Control de bodegas</li>
-                    <li>Gestión de activos fijos</li>
-                </ul>
+            <div class="herramienta-card herramienta-card--proximamente">
+                <i class="fas fa-file-signature"></i>
+                <h3>Liquidación de Contratos</h3>
+                <p>Cesantías, intereses, prima y vacaciones al finalizar un contrato laboral.</p>
+                <span class="badge-proximamente">Próximamente</span>
             </div>
 
-            <div class="servicio">
-                <i class="fas fa-laptop-code"></i>
-                <h3>Automatización y Datos</h3>
-                <ul>
-                    <li>Automatización con Excel</li>
-                    <li>Dashboards financieros</li>
-                    <li>Análisis de indicadores</li>
-                </ul>
-            </div>
-
-            <div class="servicio">
-                <i class="fas fa-receipt"></i>
-                <h3>Tributaria y Facturación</h3>
-                <ul>
-                    <li>Liquidación de impuestos</li>
-                    <li>Normativa fiscal para contratistas</li>
-                    <li>Facturación electrónica</li>
-                </ul>
-            </div>
-
-            <div class="servicio">
-                <i class="fas fa-chalkboard-teacher"></i>
-                <h3>Formación y Asesoría</h3>
-                <ul>
-                    <li>Capacitación en normativas laborales</li>
-                    <li>Asesoría contable para pymes</li>
-                    <li>Consultoría administrativa</li>
-                </ul>
+            <div class="herramienta-card herramienta-card--proximamente">
+                <i class="fas fa-balance-scale"></i>
+                <h3>Indemnizaciones</h3>
+                <p>Cálculo de indemnización por despido sin justa causa.</p>
+                <span class="badge-proximamente">Próximamente</span>
             </div>
         </div>
     </main>
