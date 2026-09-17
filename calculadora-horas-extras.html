@@ -49,9 +49,14 @@
             font-size: 1.05rem;
             font-weight: 700;
             color: #1e7b97;
-            margin-bottom: 1rem;
+            margin-bottom: 0.3rem;
             padding-bottom: 0.5rem;
             border-bottom: 2px solid #eaf5f7;
+        }
+        .calc-seccion__nota {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 1rem;
         }
         .calc-grid {
             display: grid;
@@ -74,6 +79,12 @@
         .calc-campo label i {
             color: #65b946;
             width: 16px;
+        }
+        .calc-campo .calc-tarifa {
+            font-size: 0.75rem;
+            color: #1e7b97;
+            font-weight: 700;
+            margin-left: auto;
         }
         .calc-campo input {
             padding: 0.7rem 0.9rem;
@@ -123,9 +134,6 @@
             text-align: center;
             margin-bottom: 1.2rem;
         }
-        .calc-hora-base span {
-            display: block;
-        }
         .calc-hora-base .valor {
             font-size: 1.6rem;
             font-weight: 700;
@@ -134,6 +142,13 @@
         .calc-hora-base .etiqueta {
             font-size: 0.85rem;
             color: #555;
+        }
+        .calc-subtitulo {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #179132;
+            text-transform: uppercase;
+            margin: 1rem 0 0.4rem;
         }
         .calc-detalle {
             width: 100%;
@@ -226,7 +241,7 @@
     <section class="calc-hero">
         <i class="fas fa-clock"></i>
         <h1>Calculadora de Horas Extras</h1>
-        <p>Liquida tus horas extra, recargos nocturnos y trabajo en domingos o festivos, según la normativa laboral colombiana vigente desde julio de 2026.</p>
+        <p>Liquida recargos y horas extra según la normativa laboral colombiana vigente desde julio de 2026.</p>
     </section>
 
     <div class="calc-wrap">
@@ -248,40 +263,49 @@
             </div>
 
             <div class="calc-seccion">
-                <div class="calc-seccion__titulo"><i class="fas fa-sun"></i> Horas diurnas y nocturnas en el mes</div>
+                <div class="calc-seccion__titulo"><i class="fas fa-moon"></i> Recargo nocturno</div>
+                <p class="calc-seccion__nota">Horas ya incluidas en tu salario, trabajadas de noche (7:00 p.m. a 6:00 a.m.), sin ser domingo ni festivo. Solo se paga el 35% adicional.</p>
                 <div class="calc-grid">
                     <div class="calc-campo">
-                        <label for="hedMes"><i class="fas fa-sun"></i> Horas extra diurnas</label>
-                        <input type="number" id="hedMes" value="0" min="0" step="0.5">
-                    </div>
-                    <div class="calc-campo">
-                        <label for="honMes"><i class="fas fa-moon"></i> Horas ordinarias nocturnas</label>
+                        <label for="honMes"><i class="fas fa-moon"></i> Horas ordinarias nocturnas <span class="calc-tarifa">35%</span></label>
                         <input type="number" id="honMes" value="0" min="0" step="0.5">
-                    </div>
-                    <div class="calc-campo">
-                        <label for="henMes"><i class="fas fa-moon"></i> Horas extra nocturnas</label>
-                        <input type="number" id="henMes" value="0" min="0" step="0.5">
                     </div>
                 </div>
             </div>
 
             <div class="calc-seccion">
-                <div class="calc-seccion__titulo"><i class="fas fa-calendar-day"></i> Domingos o festivos en el mes</div>
+                <div class="calc-seccion__titulo"><i class="fas fa-calendar-day"></i> Recargo dominical y festivo</div>
+                <p class="calc-seccion__nota">Horas ya incluidas en tu salario, trabajadas en domingo o festivo (sin ser tiempo extra).</p>
                 <div class="calc-grid">
                     <div class="calc-campo">
-                        <label for="hodfMes"><i class="fas fa-calendar-day"></i> Horas ordinarias</label>
+                        <label for="hodfMes"><i class="fas fa-sun"></i> Horas diurnas <span class="calc-tarifa">90%</span></label>
                         <input type="number" id="hodfMes" value="0" min="0" step="0.5">
                     </div>
                     <div class="calc-campo">
-                        <label for="heddfMes"><i class="fas fa-sun"></i> Horas extra diurnas</label>
+                        <label for="hndfMes"><i class="fas fa-moon"></i> Horas nocturnas <span class="calc-tarifa">35%+90%</span></label>
+                        <input type="number" id="hndfMes" value="0" min="0" step="0.5">
+                    </div>
+                </div>
+            </div>
+
+            <div class="calc-seccion">
+                <div class="calc-seccion__titulo"><i class="fas fa-business-time"></i> Horas extras</div>
+                <p class="calc-seccion__nota">Tiempo trabajado más allá de tu jornada. Se paga completo (100% + el recargo correspondiente), incluso si tu salario ya está pagado. Límite legal: 2 horas diarias / 12 semanales.</p>
+                <div class="calc-grid">
+                    <div class="calc-campo">
+                        <label for="hedMes"><i class="fas fa-sun"></i> Diurnas <span class="calc-tarifa">125%</span></label>
+                        <input type="number" id="hedMes" value="0" min="0" step="0.5">
+                    </div>
+                    <div class="calc-campo">
+                        <label for="henMes"><i class="fas fa-moon"></i> Nocturnas <span class="calc-tarifa">175%</span></label>
+                        <input type="number" id="henMes" value="0" min="0" step="0.5">
+                    </div>
+                    <div class="calc-campo">
+                        <label for="heddfMes"><i class="fas fa-sun"></i> Diurnas dominical/festiva <span class="calc-tarifa">215%</span></label>
                         <input type="number" id="heddfMes" value="0" min="0" step="0.5">
                     </div>
                     <div class="calc-campo">
-                        <label for="hndfMes"><i class="fas fa-moon"></i> Horas nocturnas</label>
-                        <input type="number" id="hndfMes" value="0" min="0" step="0.5">
-                    </div>
-                    <div class="calc-campo">
-                        <label for="hendfMes"><i class="fas fa-moon"></i> Horas extra nocturnas</label>
+                        <label for="hendfMes"><i class="fas fa-moon"></i> Nocturnas dominical/festiva <span class="calc-tarifa">265%</span></label>
                         <input type="number" id="hendfMes" value="0" min="0" step="0.5">
                     </div>
                 </div>
@@ -295,11 +319,20 @@
                     <span class="valor" id="rValorHora">$0</span>
                 </div>
 
+                <div class="calc-subtitulo">Recargos</div>
                 <table class="calc-detalle">
                     <thead>
-                        <tr><th>Concepto</th><th>Horas</th><th>Factor</th><th>Valor</th></tr>
+                        <tr><th>Concepto</th><th>Horas</th><th>Tarifa</th><th>Valor</th></tr>
                     </thead>
-                    <tbody id="tablaDetalle"></tbody>
+                    <tbody id="tablaRecargos"></tbody>
+                </table>
+
+                <div class="calc-subtitulo">Horas extras</div>
+                <table class="calc-detalle">
+                    <thead>
+                        <tr><th>Concepto</th><th>Horas</th><th>Tarifa</th><th>Valor</th></tr>
+                    </thead>
+                    <tbody id="tablaExtras"></tbody>
                 </table>
 
                 <div class="calc-total">
@@ -309,7 +342,7 @@
             </div>
 
             <div class="calc-legal">
-                <strong>Nota legal:</strong> Divisor mensual = jornada semanal × 5 (210 horas para jornada de 42h, vigente desde el 15 de julio de 2026, Ley 2101 de 2021). Jornada nocturna: 7:00 p.m. a 6:00 a.m. Recargo dominical/festivo: 90% (Ley 2466 de 2025, vigente hasta junio de 2027). Las horas extra siempre se pagan completas (125%, 175%, 215% o 265%); las horas ordinarias en recargo se liquidan solo con el porcentaje adicional, asumiendo salario mensual fijo. Herramienta orientativa: verifica siempre la normativa vigente al momento de liquidar.
+                <strong>Nota legal:</strong> Divisor mensual = jornada semanal × 5 (210 horas para jornada de 42h, vigente desde el 15 de julio de 2026, Ley 2101 de 2021). Jornada nocturna: 7:00 p.m. a 6:00 a.m. (Ley 2466 de 2025). Recargo dominical/festivo: 90% vigente entre julio de 2026 y junio de 2027 (subirá a 100% en julio de 2027). Las horas extra siempre se pagan completas; los recargos se liquidan solo con el porcentaje adicional, asumiendo salario mensual fijo. Límite legal de horas extra: 2 diarias / 12 semanales. Herramienta orientativa: verifica siempre la normativa vigente al momento de liquidar.
             </div>
         </div>
     </div>
@@ -334,35 +367,45 @@
             const divisor = jornada * 5;
             const valorHoraOrdinaria = salario / divisor;
 
-            const conceptos = [
-                { label: 'Horas extra diurnas', horas: parseFloat(document.getElementById('hedMes').value) || 0, factor: 1.25 },
-                { label: 'Horas ordinarias nocturnas', horas: parseFloat(document.getElementById('honMes').value) || 0, factor: 0.35 },
-                { label: 'Horas extra nocturnas', horas: parseFloat(document.getElementById('henMes').value) || 0, factor: 1.75 },
-                { label: 'Horas ordinarias domingo/festivo', horas: parseFloat(document.getElementById('hodfMes').value) || 0, factor: 0.90 },
-                { label: 'Horas extra diurnas domingo/festivo', horas: parseFloat(document.getElementById('heddfMes').value) || 0, factor: 2.15 },
-                { label: 'Horas nocturnas domingo/festivo', horas: parseFloat(document.getElementById('hndfMes').value) || 0, factor: 1.25 },
-                { label: 'Horas extra nocturnas domingo/festivo', horas: parseFloat(document.getElementById('hendfMes').value) || 0, factor: 2.65 }
+            const hndf = parseFloat(document.getElementById('hndfMes').value) || 0;
+
+            const recargos = [
+                { label: 'Recargo nocturno (no dominical/festivo)', horas: parseFloat(document.getElementById('honMes').value) || 0, factor: 0.35 },
+                { label: 'Recargo dominical/festivo (diurno)', horas: parseFloat(document.getElementById('hodfMes').value) || 0, factor: 0.90 },
+                { label: 'Recargo nocturno (en domingo/festivo)', horas: hndf, factor: 0.35 },
+                { label: 'Recargo dominical/festivo (horario nocturno)', horas: hndf, factor: 0.90 }
+            ];
+
+            const extras = [
+                { label: 'Hora extra diurna', horas: parseFloat(document.getElementById('hedMes').value) || 0, factor: 1.25 },
+                { label: 'Hora extra nocturna', horas: parseFloat(document.getElementById('henMes').value) || 0, factor: 1.75 },
+                { label: 'Hora extra dominical/festiva (diurna)', horas: parseFloat(document.getElementById('heddfMes').value) || 0, factor: 2.15 },
+                { label: 'Hora extra dominical/festiva (nocturna)', horas: parseFloat(document.getElementById('hendfMes').value) || 0, factor: 2.65 }
             ];
 
             const formato = (n) => '$' + Math.round(n).toLocaleString('es-CO');
 
             let totalGeneral = 0;
-            let filas = '';
 
-            conceptos.forEach(c => {
-                const valorConcepto = valorHoraOrdinaria * c.factor * c.horas;
-                totalGeneral += valorConcepto;
-                const claseCero = c.horas === 0 ? 'calc-fila-cero' : '';
-                filas += `<tr class="${claseCero}">
-                    <td>${c.label}</td>
-                    <td>${c.horas}</td>
-                    <td>${Math.round(c.factor * 100)}%</td>
-                    <td>${formato(valorConcepto)}</td>
-                </tr>`;
-            });
+            const construirFilas = (lista) => {
+                let html = '';
+                lista.forEach(c => {
+                    const valorConcepto = valorHoraOrdinaria * c.factor * c.horas;
+                    totalGeneral += valorConcepto;
+                    const claseCero = c.horas === 0 ? 'calc-fila-cero' : '';
+                    html += `<tr class="${claseCero}">
+                        <td>${c.label}</td>
+                        <td>${c.horas}</td>
+                        <td>${Math.round(c.factor * 100)}%</td>
+                        <td>${formato(valorConcepto)}</td>
+                    </tr>`;
+                });
+                return html;
+            };
 
+            document.getElementById('tablaRecargos').innerHTML = construirFilas(recargos);
+            document.getElementById('tablaExtras').innerHTML = construirFilas(extras);
             document.getElementById('rValorHora').textContent = formato(valorHoraOrdinaria);
-            document.getElementById('tablaDetalle').innerHTML = filas;
             document.getElementById('rTotal').textContent = formato(totalGeneral);
             document.getElementById('resultado').classList.add('visible');
         }
