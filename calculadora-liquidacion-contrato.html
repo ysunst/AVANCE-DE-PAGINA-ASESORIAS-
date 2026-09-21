@@ -451,6 +451,43 @@
           <label for="cargo">Cargo</label>
           <input type="text" id="cargo" placeholder="Último cargo">
         </div>
+        <div class="field">
+          <label for="departamento">Departamento</label>
+          <input type="text" id="departamento" placeholder="Escribe el departamento (ej: Cundinamarca)">
+          <span class="hint">Departamento de Colombia donde presta el servicio el empleado.</span>
+        </div>
+        <div class="field">
+          <label for="centrocosto">Centro de costo</label>
+          <input type="text" id="centrocosto" placeholder="Escribe el centro de costo (ej: Zona Norte)">
+          <span class="hint">Código o nombre del centro de costo asignado por la empresa.</span>
+        </div>
+        <div class="field">
+          <label for="nocontrato">No. de contrato</label>
+          <input type="text" id="nocontrato" placeholder="Escribe el número de contrato (ej: 2797)">
+          <span class="hint">Número o consecutivo interno del contrato de trabajo.</span>
+        </div>
+        <div class="field">
+          <label for="cuenta">Cuenta bancaria de pago</label>
+          <input type="text" id="cuenta" placeholder="Escribe la cuenta de pago (ej: 1234567890)">
+          <span class="hint">Cuenta donde se consignará el pago de la liquidación.</span>
+        </div>
+        <div class="field">
+          <label for="fondopension">Fondo de pensión</label>
+          <input type="text" id="fondopension" placeholder="Escribe el fondo (ej: Porvenir, Colpensiones)">
+          <span class="hint">Administradora de pensiones (AFP) a la que está afiliado el empleado.</span>
+        </div>
+        <div class="field">
+          <label for="eps">EPS / Fondo de salud</label>
+          <input type="text" id="eps" placeholder="Escribe la EPS (ej: Sura EPS, Salud Total)">
+          <span class="hint">Entidad Promotora de Salud a la que está afiliado el empleado.</span>
+        </div>
+        <div class="field span2">
+          <label for="regimencesantias">Régimen de cesantías</label>
+          <select id="regimencesantias">
+            <option value="Ley 50 de 1990">Ley 50 de 1990 (anualizado, fondo privado)</option>
+            <option value="Régimen tradicional (retroactivo)">Régimen tradicional (retroactivo, anterior a Ley 50 de 1990)</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -654,7 +691,8 @@
           <button type="button" id="btnUnlock">Desbloquear</button>
         </div>
         <div class="pro-downloads" id="proDownloads" style="display:none;">
-          <button type="button" id="btnPDF" disabled>Descargar PDF</button>
+          <button type="button" id="btnPDF" disabled>Descargar PDF (liquidación)</button>
+          <button type="button" id="btnWorksheetPDF" disabled>Descargar PDF (hoja de trabajo)</button>
           <button type="button" id="btnExcel" disabled>Descargar plantilla Excel</button>
         </div>
         <p class="hint" id="proMsg" style="margin-top:10px;"></p>
@@ -1066,14 +1104,44 @@
       logo: logoDataUrl,
       logoDims,
       cargo: $('cargo').value.trim(),
+      departamento: $('departamento').value.trim(),
+      centroCosto: $('centrocosto').value.trim(),
+      noContrato: $('nocontrato').value.trim(),
+      cuenta: $('cuenta').value.trim(),
+      fondoPension: $('fondopension').value.trim(),
+      eps: $('eps').value.trim(),
+      regimenCesantias: $('regimencesantias').options[$('regimencesantias').selectedIndex].text,
+      tipoContratoLabel: $('tipocontrato').options[$('tipocontrato').selectedIndex].text,
+      causaLabel: $('causa').options[$('causa').selectedIndex].text,
       fingresoStr: $('fingreso').value, fretiroStr: $('fretiro').value,
+      diasTotales, diasLicencia, diasNetos,
+      salario, baseCesantias, basePrima, baseVacaciones,
       rows, totalDevengado, totalDeducido, neto, refCode,
       actaTexto: $('actaTexto').textContent, actaFecha,
-      pdfDownloaded: false, excelDownloaded: false,
+      pdfDownloaded: false, excelDownloaded: false, worksheetPdfDownloaded: false,
+      // ---- detalle completo (hoja de trabajo) ----
+      detalle: {
+        transporte, diasSalarioPend, salarioDiario, transporteDiario,
+        horasExtrasMes, recargosMes, dominicalesMes,
+        horasExtrasProm: horasExtras, comisionesProm: comisiones,
+        variableSalarial, cesantiasAnt, primaAnt,
+        diasCesantiasPend, diasPrimaPend,
+        vacIniStr: $('vacIni').value, vacFinStr: $('vacFin').value,
+        diasVacTrabajados, diasVacCausados,
+        tipoContrato, generaIndemnizacion, supera10,
+        diasRestantesPactado, diasIndemnizacion, indemnizacion,
+        pctSalud: pctSalud*100, pctPension: pctPension*100, baseAportes, salud, pension, reteFuente,
+        devExtra, dedExtra, sumDevExtra, sumDedExtra, sumDevPrestacional,
+        cesantias, interesesCesantias, prima, vacaciones,
+        salarioPendiente, transportePendiente,
+        diasLicenciaVal: diasLicencia,
+      },
     };
     $('btnPDF').disabled = !proUnlocked;
+    $('btnWorksheetPDF').disabled = !proUnlocked;
     $('btnExcel').disabled = !proUnlocked;
-    $('btnPDF').textContent = 'Descargar PDF';
+    $('btnPDF').textContent = 'Descargar PDF (liquidación)';
+    $('btnWorksheetPDF').textContent = 'Descargar PDF (hoja de trabajo)';
     $('btnExcel').textContent = 'Descargar plantilla Excel';
     $('refCodeDisplay').textContent = `Código de referencia de este pago: ${refCode}`;
     const valorMesEnCurso = salarioPendiente + transportePendiente + horasExtrasMes + recargosMes + dominicalesMes;
@@ -1097,6 +1165,7 @@
     $('devengadosExtra').innerHTML = '';
     $('deduccionesExtra').innerHTML = '';
     $('tipocontrato').value = 'indefinido';
+    $('regimencesantias').value = 'Ley 50 de 1990';
     $('causa').value = 'despido_sin_justa';
     $('generaIndemnizacion').checked = true;
     $('breakdownSection').style.display = 'none';
@@ -1105,8 +1174,10 @@
     $('actaFechaTexto').textContent = 'Para constancia se firma la presente en la ciudad de Bogotá a los ______ días del mes de ______________ de ________.';
     lastResult = null;
     $('btnPDF').disabled = true;
+    $('btnWorksheetPDF').disabled = true;
     $('btnExcel').disabled = true;
-    $('btnPDF').textContent = 'Descargar PDF';
+    $('btnPDF').textContent = 'Descargar PDF (liquidación)';
+    $('btnWorksheetPDF').textContent = 'Descargar PDF (hoja de trabajo)';
     $('btnExcel').textContent = 'Descargar plantilla Excel';
     $('proMsg').textContent = '';
     $('refCodeDisplay').textContent = '';
@@ -1187,6 +1258,7 @@
       proUnlocked = true;
       $('proDownloads').style.display = 'flex';
       $('btnPDF').disabled = !lastResult;
+      $('btnWorksheetPDF').disabled = !lastResult;
       $('btnExcel').disabled = !lastResult;
       $('proMsg').textContent = lastResult
         ? 'Acceso desbloqueado. Ya puedes descargar el PDF y el Excel de esta liquidación.'
@@ -1216,97 +1288,309 @@
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
   }
 
+  // ---- convertir un valor en pesos a letras (para la línea "SON:") ----
+  function numeroALetras(n){
+    n = Math.round(n);
+    if(n === 0) return 'CERO';
+    const UNI = ['', 'UN', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE'];
+    const ESP = ['DIEZ','ONCE','DOCE','TRECE','CATORCE','QUINCE','DIECISÉIS','DIECISIETE','DIECIOCHO','DIECINUEVE'];
+    const DEC = ['','','VEINTE','TREINTA','CUARENTA','CINCUENTA','SESENTA','SETENTA','OCHENTA','NOVENTA'];
+    const CEN = ['','CIENTO','DOSCIENTOS','TRESCIENTOS','CUATROCIENTOS','QUINIENTOS','SEISCIENTOS','SETECIENTOS','OCHOCIENTOS','NOVECIENTOS'];
+    function grupo(x){
+      if(x === 100) return 'CIEN';
+      const c = Math.floor(x/100), r = x % 100;
+      let out = c > 0 ? CEN[c] + ' ' : '';
+      if(r > 0){
+        if(r < 10) out += UNI[r];
+        else if(r < 20) out += ESP[r-10];
+        else {
+          const d = Math.floor(r/10), u = r % 10;
+          out += u === 0 ? DEC[d] : `${DEC[d]} Y ${UNI[u]}`;
+        }
+      }
+      return out.trim();
+    }
+    const millones = Math.floor(n / 1000000);
+    const miles = Math.floor((n % 1000000) / 1000);
+    const cientos = n % 1000;
+    const partes = [];
+    if(millones > 0) partes.push(millones === 1 ? 'UN MILLÓN' : `${grupo(millones)} MILLONES`);
+    if(miles > 0) partes.push(miles === 1 ? 'MIL' : `${grupo(miles)} MIL`);
+    if(cientos > 0) partes.push(grupo(cientos));
+    return partes.join(' ').trim();
+  }
+  function valorEnLetras(valor){
+    return `${numeroALetras(valor)} PESOS M/CTE.`;
+  }
+
   function buildPDF(){
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-    let y = 18;
+    const pageW = 210, marginX = 14, right = pageW - marginX, centerX = pageW / 2;
+    let y = 16;
 
+    // ---- membrete ----
     if(lastResult.logo){
-      const maxW = 32, maxH = 18;
+      const maxW = 26, maxH = 16;
       let w = maxW, h = maxH;
       if(lastResult.logoDims && lastResult.logoDims.w && lastResult.logoDims.h){
         const ratio = lastResult.logoDims.w / lastResult.logoDims.h;
         if(ratio > maxW / maxH){ w = maxW; h = maxW / ratio; } else { h = maxH; w = maxH * ratio; }
       }
       const fmtType = lastResult.logo.indexOf('image/png') !== -1 ? 'PNG' : 'JPEG';
-      try{ doc.addImage(lastResult.logo, fmtType, 14, 10, w, h); }catch(e){ /* logo inválido, se omite */ }
-      doc.setFont('helvetica','bold'); doc.setFontSize(12);
-      doc.text(lastResult.empresa || 'Empresa', 14 + w + 6, 16);
-      if(lastResult.nit){
-        doc.setFont('helvetica','normal'); doc.setFontSize(9);
-        doc.text(`NIT: ${lastResult.nit}`, 14 + w + 6, 21);
-      }
-      y = 10 + Math.max(h, 14) + 6;
-      doc.setLineWidth(0.3); doc.line(14, y, 196, y); y += 7;
+      try{ doc.addImage(lastResult.logo, fmtType, marginX, y, w, h); }catch(e){ /* logo inválido, se omite */ }
     }
+    doc.setFont('helvetica','bold'); doc.setFontSize(13);
+    doc.text(lastResult.empresa || 'Empresa', centerX, y + 5, {align:'center'});
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    if(lastResult.nit) doc.text(`NIT: ${lastResult.nit}`, centerX, y + 10, {align:'center'});
+    y += 20;
+    doc.setLineWidth(0.4); doc.line(marginX, y, right, y); y += 8;
 
-    doc.setFont('helvetica','bold'); doc.setFontSize(15);
-    doc.text('Liquidación de contrato', 14, y); y += 8;
-    doc.setFontSize(10); doc.setFont('helvetica','normal');
-    doc.text(`Empresa: ${lastResult.empresa || '-'}`, 14, y); y += 5;
-    if(lastResult.nit){ doc.text(`NIT: ${lastResult.nit}`, 14, y); y += 5; }
-    doc.text(`Empleado: ${lastResult.nombre || '-'}    Cédula: ${lastResult.cedula || '-'}`, 14, y); y += 5;
-    doc.text(`Cargo: ${lastResult.cargo || '-'}`, 14, y); y += 5;
-    doc.text(`Fecha ingreso: ${lastResult.fingresoStr || '-'}    Fecha retiro: ${lastResult.fretiroStr || '-'}`, 14, y); y += 5;
-    doc.text(`Código de referencia: ${lastResult.refCode || '-'}`, 14, y); y += 8;
+    doc.setFont('helvetica','bold'); doc.setFontSize(14);
+    doc.text('LIQUIDACIÓN DE CONTRATO', centerX, y, {align:'center'}); y += 9;
 
-    doc.setFont('helvetica','bold');
-    doc.text('Concepto', 14, y);
-    doc.text('Días', 112, y, {align:'right'});
-    doc.text('Devengado', 152, y, {align:'right'});
-    doc.text('Deducido', 196, y, {align:'right'});
-    y += 2; doc.setLineWidth(0.2); doc.line(14, y, 196, y); y += 5;
+    // ---- datos del contrato, dos columnas ----
+    const colL = marginX, colR = 108;
+    doc.setFontSize(9);
+    function kv(label, value, x, yy){
+      doc.setFont('helvetica','bold'); doc.text(`${label}:`, x, yy);
+      doc.setFont('helvetica','normal');
+      doc.text(String(value ?? '-') || '-', x + doc.getTextWidth(`${label}: `) , yy);
+    }
+    const filas = [
+      [['Empleado', lastResult.nombre], ['Identificación', lastResult.cedula]],
+      [['Departamento', lastResult.departamento], ['Centro de costo', lastResult.centroCosto]],
+      [['Régimen cesantías', lastResult.regimenCesantias], ['No. contrato', lastResult.noContrato]],
+      [['Tipo de contrato', lastResult.tipoContratoLabel], ['Cuenta de pago', lastResult.cuenta]],
+      [['Último cargo', lastResult.cargo], ['Pensión', lastResult.fondoPension]],
+      [['Causa de terminación', lastResult.causaLabel], ['Salud', lastResult.eps]],
+      [['Fecha ingreso', lastResult.fingresoStr], ['Fecha retiro', lastResult.fretiroStr]],
+      [['Días totales', fmtDias(lastResult.diasTotales)], ['Días licencia', fmtDias(lastResult.diasLicencia)]],
+      [['Días netos', fmtDias(lastResult.diasNetos)], ['Último sueldo', fmt(lastResult.salario)]],
+      [['Base cesantías', fmt(lastResult.baseCesantias)], ['Base prima', fmt(lastResult.basePrima)]],
+      [['Base vacaciones', fmt(lastResult.baseVacaciones)], ['Código de referencia', lastResult.refCode]],
+    ];
+    filas.forEach(([izq, der])=>{
+      kv(izq[0], izq[1], colL, y);
+      kv(der[0], der[1], colR, y);
+      y += 5.2;
+    });
+    y += 4;
+
+    // ---- tabla de conceptos ----
+    const tableTop = y;
+    const cDesc = marginX, cCant = 140, cDev = 165, cDed = right;
+    doc.setFont('helvetica','bold'); doc.setFontSize(9);
+    doc.text('DESCRIPCIÓN', cDesc, y);
+    doc.text('CANTIDAD', cCant, y, {align:'right'});
+    doc.text('DEVENGADOS', cDev, y, {align:'right'});
+    doc.text('DEDUCIDOS', cDed, y, {align:'right'});
+    y += 2; doc.setLineWidth(0.3); doc.line(marginX, y, right, y); y += 5;
     doc.setFont('helvetica','normal');
     lastResult.rows.forEach(([desc,dias,dev,ded])=>{
-      if(y > 270){ doc.addPage(); y = 18; }
-      doc.text(String(desc).slice(0,58), 14, y);
-      doc.text(dias ? fmtDias(dias) : '', 112, y, {align:'right'});
-      doc.text(dev ? fmt(dev) : '—', 152, y, {align:'right'});
-      doc.text(ded ? fmt(ded) : '—', 196, y, {align:'right'});
-      y += 6;
+      if(y > 272){
+        doc.line(marginX, y+2, right, y+2);
+        doc.addPage(); y = 18;
+      }
+      doc.text(String(desc).slice(0,62), cDesc, y);
+      doc.text(dias ? fmtDias(dias) : '—', cCant, y, {align:'right'});
+      doc.text(dev ? fmt(dev) : '—', cDev, y, {align:'right'});
+      doc.text(ded ? fmt(ded) : '—', cDed, y, {align:'right'});
+      y += 5.5;
     });
-    y += 1; doc.setLineWidth(0.4); doc.line(14, y, 196, y); y += 6;
+    doc.setLineWidth(0.3); doc.line(marginX, y, right, y); y += 5;
     doc.setFont('helvetica','bold');
-    doc.text('Totales', 14, y);
-    doc.text(fmt(lastResult.totalDevengado), 152, y, {align:'right'});
-    doc.text(fmt(lastResult.totalDeducido), 196, y, {align:'right'});
-    y += 8;
-    doc.setFontSize(12);
-    doc.text(`Neto a pagar: ${fmt(lastResult.neto)}`, 14, y);
-    y += 12;
+    doc.text('TOTALES', cDesc, y);
+    doc.text(fmt(lastResult.totalDevengado), cDev, y, {align:'right'});
+    doc.text(fmt(lastResult.totalDeducido), cDed, y, {align:'right'});
+    y += 3;
+    // borde exterior de la tabla
+    doc.setLineWidth(0.3); doc.rect(marginX, tableTop - 4.5, right - marginX, y - (tableTop - 4.5));
+    doc.line(cCant - 22, tableTop - 4.5, cCant - 22, y);
+    y += 7;
 
-    doc.setFontSize(10); doc.setFont('helvetica','bold');
-    doc.text('Constancia de recibo de prestaciones sociales e indemnización', 14, y); y += 6;
-    doc.setFont('helvetica','normal');
-    const actaLines = doc.splitTextToSize(lastResult.actaTexto, 182);
-    if(y + actaLines.length*4.6 > 280){ doc.addPage(); y = 18; }
-    doc.text(actaLines, 14, y); y += actaLines.length*4.6 + 4;
-    const fechaLines = doc.splitTextToSize(lastResult.actaFecha, 182);
-    doc.text(fechaLines, 14, y); y += fechaLines.length*4.6 + 18;
+    doc.setFontSize(11);
+    doc.text(`NETO A PAGAR: ${fmt(lastResult.neto)}`, cDesc, y);
+    y += 7;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    const sonLines = doc.splitTextToSize(`SON: ${valorEnLetras(lastResult.neto)}`, right - marginX);
+    doc.text(sonLines, cDesc, y); y += sonLines.length * 4.4 + 8;
 
-    if(y > 270){ doc.addPage(); y = 40; }
-    doc.text('____________________', 14, y);
-    doc.text('____________________', 82, y);
-    doc.text('____________________', 150, y);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10);
+    doc.text('CONSTANCIA DE RECIBO DE PRESTACIONES SOCIALES E INDEMNIZACIÓN', centerX, y, {align:'center'}); y += 6;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    const actaLines = doc.splitTextToSize(lastResult.actaTexto, right - marginX);
+    if(y + actaLines.length*4.4 > 280){ doc.addPage(); y = 18; }
+    doc.text(actaLines, cDesc, y); y += actaLines.length*4.4 + 4;
+    const fechaLines = doc.splitTextToSize(lastResult.actaFecha, right - marginX);
+    doc.text(fechaLines, cDesc, y); y += fechaLines.length*4.4 + 18;
+
+    if(y > 265) { doc.addPage(); y = 40; }
+    doc.line(marginX, y, marginX + 45, y);
+    doc.line(centerX - 22, y, centerX + 23, y);
+    doc.line(right - 45, y, right, y);
     y += 5;
     doc.setFontSize(8);
-    doc.text('Elaboró', 14, y);
-    doc.text('Revisó', 82, y);
-    doc.text('Recibido por', 150, y);
+    doc.text('Elaboró', marginX, y);
+    doc.text('Revisó', centerX, y, {align:'center'});
+    doc.text('Recibido por', right, y, {align:'right'});
+
+    return doc.output('blob');
+  }
+
+  // ---- hoja de trabajo: todos los datos suministrados y calculados, para archivo interno de la empresa ----
+  function buildWorksheetPDF(){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const marginX = 14, right = 196, centerX = 105;
+    const d = lastResult.detalle;
+    let y = 16;
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(13);
+    doc.text('HOJA DE TRABAJO — LIQUIDACIÓN DE CONTRATO', centerX, y, {align:'center'}); y += 5;
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+    doc.text('Documento interno con el detalle completo de los datos suministrados y calculados. No reemplaza el PDF de liquidación.', centerX, y, {align:'center'}); y += 7;
+    doc.setLineWidth(0.3); doc.line(marginX, y, right, y); y += 6;
+
+    function seccion(titulo){
+      if(y > 265){ doc.addPage(); y = 18; }
+      doc.setFont('helvetica','bold'); doc.setFontSize(10);
+      doc.setFillColor(240,240,240);
+      doc.rect(marginX, y - 4, right - marginX, 6, 'F');
+      doc.text(titulo, marginX + 2, y);
+      y += 7;
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.7);
+    }
+    function linea(label, value){
+      if(y > 280){ doc.addPage(); y = 18; }
+      const txt = `${label}: ${value === '' || value === null || value === undefined ? '-' : value}`;
+      const wrapped = doc.splitTextToSize(txt, right - marginX);
+      doc.text(wrapped, marginX, y);
+      y += wrapped.length * 4.2;
+    }
+    function si(b){ return b ? 'Sí' : 'No'; }
+
+    seccion('1. Datos generales');
+    linea('Empresa', lastResult.empresa);
+    linea('NIT', lastResult.nit);
+    linea('Empleado', lastResult.nombre);
+    linea('Cédula', lastResult.cedula);
+    linea('Cargo', lastResult.cargo);
+    linea('Departamento', lastResult.departamento);
+    linea('Centro de costo', lastResult.centroCosto);
+    linea('No. de contrato', lastResult.noContrato);
+    linea('Cuenta de pago', lastResult.cuenta);
+    linea('Fondo de pensión', lastResult.fondoPension);
+    linea('EPS / Fondo de salud', lastResult.eps);
+    linea('Régimen de cesantías', lastResult.regimenCesantias);
+    linea('Código de referencia', lastResult.refCode);
+
+    seccion('2. Contrato y fechas');
+    linea('Tipo de contrato', lastResult.tipoContratoLabel);
+    linea('Causa de terminación', lastResult.causaLabel);
+    linea('¿Genera indemnización?', si(d.generaIndemnizacion));
+    linea('¿Devenga 10 SMLMV o más?', si(d.supera10));
+    linea('Fecha de ingreso', lastResult.fingresoStr);
+    linea('Fecha de retiro', lastResult.fretiroStr);
+    linea('Días totales', fmtDias(lastResult.diasTotales));
+    linea('Días de licencia no remunerada', fmtDias(d.diasLicenciaVal));
+    linea('Días netos', fmtDias(lastResult.diasNetos));
+    if(d.tipoContrato !== 'indefinido'){
+      linea('Días restantes del plazo pactado (fijo/obra)', fmtDias(d.diasRestantesPactado));
+    }
+
+    seccion('3. Salario y bases');
+    linea('Último salario mensual', fmt(lastResult.salario));
+    linea('Auxilio de transporte (calculado)', fmt(d.transporte));
+    linea('Días pendientes de salario/transporte del período final', fmtDias(d.diasSalarioPend));
+    linea('Salario diario', fmt(d.salarioDiario));
+    linea('Horas extras del mes en curso', fmt(d.horasExtrasMes));
+    linea('Recargos ordinarios/nocturnos del mes en curso', fmt(d.recargosMes));
+    linea('Domingos y festivos del mes en curso', fmt(d.dominicalesMes));
+    linea('Horas extras — promedio mensual (último año)', fmt(d.horasExtrasProm));
+    linea('Comisiones — promedio mensual (último año)', fmt(d.comisionesProm));
+    linea('Total salario variable integrado a la base', fmt(d.variableSalarial));
+    linea('Base cesantías', fmt(lastResult.baseCesantias));
+    linea('Base prima', fmt(lastResult.basePrima));
+    linea('Base vacaciones', fmt(lastResult.baseVacaciones));
+    linea('Cesantías pendientes de años anteriores', fmt(d.cesantiasAnt));
+    linea('Prima pendiente de semestres anteriores', fmt(d.primaAnt));
+
+    seccion('4. Vacaciones');
+    linea('Período (días trabajados sin disfrutar) — desde', d.vacIniStr || '-');
+    linea('Período (días trabajados sin disfrutar) — hasta', d.vacFinStr || '-');
+    linea('Días trabajados en el período', fmtDias(d.diasVacTrabajados));
+    linea('Días causados (días trabajados × 15 ÷ 360)', fmtDias(d.diasVacCausados));
+    linea('Valor vacaciones (Salario × días ÷ 720)', fmt(d.vacaciones));
+
+    seccion('5. Cesantías, intereses y prima');
+    linea('Días pendientes de cesantías (desde inicio del año)', fmtDias(d.diasCesantiasPend));
+    linea('Valor cesantías', fmt(d.cesantias));
+    linea('Valor intereses sobre cesantías (12% anual)', fmt(d.interesesCesantias));
+    linea('Días pendientes de prima (desde inicio del semestre)', fmtDias(d.diasPrimaPend));
+    linea('Valor prima de servicios', fmt(d.prima));
+
+    if(d.indemnizacion > 0){
+      seccion('6. Indemnización');
+      linea('Días de indemnización', fmtDias(d.diasIndemnizacion));
+      linea('Valor indemnización', fmt(d.indemnizacion));
+    }
+
+    seccion('7. Aportes y deducciones de ley');
+    linea('% Salud empleado', `${d.pctSalud}%`);
+    linea('% Pensión empleado', `${d.pctPension}%`);
+    linea('Base de aportes (salario ordinario del período final)', fmt(d.baseAportes));
+    linea('Valor salud empleado', fmt(d.salud));
+    linea('Valor pensión empleado', fmt(d.pension));
+    linea('Retención en la fuente', fmt(d.reteFuente));
+
+    if(d.devExtra && d.devExtra.length){
+      seccion('8. Otros devengados');
+      d.devExtra.forEach(l => linea(`${l.desc}${l.prest ? ' (prestacional)' : ' (no salarial)'}`, fmt(l.val)));
+    }
+    if(d.dedExtra && d.dedExtra.length){
+      seccion('9. Otras deducciones');
+      d.dedExtra.forEach(l => linea(l.desc, fmt(l.val)));
+    }
+
+    seccion('10. Resultado final');
+    linea('Salario pendiente del período', fmt(d.salarioPendiente));
+    linea('Auxilio de transporte pendiente', fmt(d.transportePendiente));
+    linea('Total devengado', fmt(lastResult.totalDevengado));
+    linea('Total deducido', fmt(lastResult.totalDeducido));
+    linea('NETO A PAGAR', fmt(lastResult.neto));
+    linea('En letras', valorEnLetras(lastResult.neto));
 
     return doc.output('blob');
   }
 
   function buildExcel(){
     const wsData = [
-      ['Liquidación de contrato'],
+      ['LIQUIDACIÓN DE CONTRATO'],
       ['Empresa', lastResult.empresa || ''],
       ['NIT', lastResult.nit || ''],
       ['Empleado', lastResult.nombre || ''],
       ['Cédula', lastResult.cedula || ''],
       ['Cargo', lastResult.cargo || ''],
+      ['Departamento', lastResult.departamento || ''],
+      ['Centro de costo', lastResult.centroCosto || ''],
+      ['Régimen cesantías', lastResult.regimenCesantias || ''],
+      ['Tipo de contrato', lastResult.tipoContratoLabel || ''],
+      ['No. de contrato', lastResult.noContrato || ''],
+      ['Cuenta de pago', lastResult.cuenta || ''],
+      ['Fondo de pensión', lastResult.fondoPension || ''],
+      ['EPS / Fondo de salud', lastResult.eps || ''],
+      ['Causa de terminación', lastResult.causaLabel || ''],
       ['Fecha ingreso', lastResult.fingresoStr || ''],
       ['Fecha retiro', lastResult.fretiroStr || ''],
+      ['Días totales', lastResult.diasTotales || 0],
+      ['Días licencia', lastResult.diasLicencia || 0],
+      ['Días netos', lastResult.diasNetos || 0],
+      ['Base cesantías', lastResult.baseCesantias || 0],
+      ['Base prima', lastResult.basePrima || 0],
+      ['Base vacaciones', lastResult.baseVacaciones || 0],
+      ['Último sueldo', lastResult.salario || 0],
       ['Código de referencia', lastResult.refCode || ''],
       [],
       ['Concepto', 'Días', 'Devengado', 'Deducido'],
@@ -1315,12 +1599,14 @@
     wsData.push(['Totales', '', lastResult.totalDevengado, lastResult.totalDeducido]);
     wsData.push(['Neto a pagar', '', '', lastResult.neto]);
     wsData.push([]);
+    wsData.push(['SON', valorEnLetras(lastResult.neto)]);
+    wsData.push([]);
     wsData.push(['Constancia de recibo']);
     wsData.push([lastResult.actaTexto]);
     wsData.push([lastResult.actaFecha]);
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols'] = [{wch:48},{wch:12},{wch:16},{wch:16}];
+    ws['!cols'] = [{wch:48},{wch:16},{wch:16},{wch:16}];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Liquidación');
     const out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
@@ -1336,6 +1622,17 @@
       $('btnPDF').textContent = 'PDF descargado ✓';
       $('btnPDF').disabled = true;
     }catch(e){ $('proMsg').textContent = 'No se pudo generar el PDF. Intenta de nuevo.'; }
+  });
+
+  $('btnWorksheetPDF').addEventListener('click', async ()=>{
+    if(!proUnlocked || !lastResult) return;
+    try{
+      const blob = buildWorksheetPDF();
+      const filename = `Hoja_trabajo_${(lastResult.nombre||'empleado').trim().replace(/\s+/g,'_') || 'empleado'}.pdf`;
+      await saveFile(filename, blob);
+      $('btnWorksheetPDF').textContent = 'PDF descargado ✓';
+      $('btnWorksheetPDF').disabled = true;
+    }catch(e){ $('proMsg').textContent = 'No se pudo generar la hoja de trabajo. Intenta de nuevo.'; }
   });
 
   $('btnExcel').addEventListener('click', async ()=>{
