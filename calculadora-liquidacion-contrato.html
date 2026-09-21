@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calculadora de liquidación de contrato · Trinomio SAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.3/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --paper:#F3F8F9;
+    --paper-raised:#FFFFFF;
+    --ink:#0F2A2E;
+    --ink-soft:#4E6A6E;
+    --gold:#1FA9D6;
+    --gold-deep:#1e7b97;
+    --green:#179132;
+    --green-bg:#E1F5EA;
+    --brick:#C0392B;
+    --brick-bg:#FBE6E2;
+    --rule:#D9E6E8;
+    --rule-strong:#B7CCCF;
+    --brand-green:#179132;
+    --brand-teal:#1e7b97;
+    font-size:16px;
+  }
+  :root:not([data-theme="light"]){
+    @media (prefers-color-scheme: dark){
+      --paper:#0C1618;
+      --paper-raised:#132224;
+      --ink:#E4F1F2;
+      --ink-soft:#9BB4B7;
+      --gold:#5CC9EC;
+      --gold-deep:#59B8D6;
+      --green:#3FCB63;
+      --green-bg:#12301F;
+      --brick:#E4776A;
+      --brick-bg:#3A1F1A;
+      --rule:#1E3437;
+      --rule-strong:#2C494D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0C1618;
+    --paper-raised:#132224;
+    --ink:#E4F1F2;
+    --ink-soft:#9BB4B7;
+    --gold:#5CC9EC;
+    --gold-deep:#59B8D6;
+    --green:#3FCB63;
+    --green-bg:#12301F;
+    --brick:#E4776A;
+    --brick-bg:#3A1F1A;
+    --rule:#1E3437;
+    --rule-strong:#2C494D;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top: env(safe-area-inset-top, 0px);}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Poppins',sans-serif;
+    font-weight:700;
+    margin:0;
+    color:var(--ink);
+  }
+  .num{ font-variant-numeric: tabular-nums; }
+
+  header.top{
+    padding: clamp(28px,4vw,48px) clamp(20px,5vw,64px) clamp(34px,5vw,56px);
+    background: linear-gradient(120deg, var(--brand-green) 0%, var(--brand-teal) 100%);
+    position:relative;
+    overflow:hidden;
+  }
+  header.top .brand-row{
+    display:flex; align-items:center; gap:10px; margin-bottom:16px;
+  }
+  header.top .brand-row .dot{
+    width:10px; height:10px; border-radius:50%; background:#fff;
+  }
+  header.top .brand-row span{
+    color:#fff; opacity:.92; font-weight:600; font-size:.86rem; letter-spacing:.02em;
+  }
+  header.top .eyebrow{
+    color:rgba(255,255,255,.85);
+    font-size:.85rem;
+    margin-bottom:6px;
+  }
+  header.top h1{
+    font-size:clamp(1.9rem,3.6vw,2.7rem);
+    letter-spacing:-0.01em;
+    color:#fff;
+  }
+  header.top p.sub{
+    margin-top:10px;
+    max-width:620px;
+    color:rgba(255,255,255,.9);
+    font-size:.98rem;
+    line-height:1.5;
+  }
+
+  main{
+    max-width:1180px;
+    margin:0 auto;
+    padding: clamp(20px,4vw,40px) clamp(20px,5vw,64px) 80px;
+    display:grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: clamp(24px,4vw,56px);
+    align-items:start;
+  }
+  @media (max-width: 880px){
+    main{ grid-template-columns: 1fr; }
+  }
+
+  section.card{ }
+  .group{
+    padding: 22px 0 26px;
+    border-bottom:1px solid var(--rule);
+  }
+  .group:first-child{ padding-top:0; }
+  .group h2{
+    font-size:1.08rem;
+    margin-bottom:14px;
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+  }
+  .group h2 .idx{
+    color:var(--gold-deep);
+    font-family:'Poppins',sans-serif;
+    font-weight:700;
+    font-size:.95rem;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 14px 18px;
+  }
+  .grid.g3{ grid-template-columns: repeat(3,1fr); }
+  @media (max-width:560px){
+    .grid, .grid.g3{ grid-template-columns:1fr; }
+  }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  .field.span2{ grid-column: span 2; }
+  @media (max-width:560px){ .field.span2{ grid-column: span 1; } }
+  label{
+    font-size:.82rem;
+    color:var(--ink-soft);
+    line-height:1.3;
+  }
+  input[type=text], input[type=number], input[type=date], select{
+    font-family:'Inter',sans-serif;
+    font-size:.96rem;
+    padding:9px 10px;
+    border:1px solid var(--rule-strong);
+    background:var(--paper-raised);
+    color:var(--ink);
+    border-radius:3px;
+    width:100%;
+  }
+  input:focus, select:focus{
+    outline:2px solid var(--gold);
+    outline-offset:1px;
+    border-color:var(--gold);
+  }
+  .hint{ font-size:.76rem; color:var(--ink-soft); margin-top:2px; }
+  .checkline{
+    display:flex; align-items:center; gap:8px;
+    font-size:.86rem; color:var(--ink-soft);
+    grid-column:1 / -1;
+  }
+  .checkline input{ width:auto; }
+
+  .rowline{
+    display:grid;
+    grid-template-columns: 1fr 140px 34px;
+    gap:10px;
+    margin-bottom:8px;
+    align-items:center;
+  }
+  .rowline.rowline-dev{
+    grid-template-columns: 1fr 130px 108px 34px;
+  }
+  @media (max-width:560px){
+    .rowline{ grid-template-columns: 1fr 110px 30px; }
+    .rowline.rowline-dev{ grid-template-columns: 1fr 1fr; }
+    .rowline.rowline-dev .del{ grid-column: 2; justify-self:end; width:34px; }
+  }
+  .rowline button.del{
+    background:none;border:1px solid var(--rule-strong);
+    color:var(--brick); border-radius:3px; height:38px; cursor:pointer;
+    font-size:1rem;
+  }
+  .addline{
+    background:none; border:1px dashed var(--rule-strong);
+    color:var(--ink-soft); border-radius:3px;
+    padding:8px 12px; font-size:.85rem; cursor:pointer;
+    width:100%; margin-top:4px; font-family:'Inter',sans-serif;
+  }
+  .addline:hover{ border-color:var(--gold); color:var(--gold-deep); }
+
+  .actions{ display:flex; gap:12px; margin-top:24px; flex-wrap:wrap; }
+  button.primary{
+    background:var(--brand-green); color:#fff;
+    border:none; padding:12px 22px; border-radius:3px;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:.92rem;
+    cursor:pointer;
+  }
+  button.ghost{
+    background:none; border:1px solid var(--rule-strong); color:var(--ink-soft);
+    padding:12px 20px; border-radius:3px; font-family:'Inter',sans-serif; font-size:.92rem;
+    cursor:pointer;
+  }
+  button.ghost:hover{ border-color:var(--ink-soft); color:var(--ink); }
+
+  /* Summary panel */
+  aside.summary{
+    position:sticky;
+    top: calc(20px + env(safe-area-inset-top,0px));
+    background:var(--paper-raised);
+    border:1px solid var(--rule-strong);
+    border-radius:4px;
+    padding:26px 26px 22px;
+  }
+  aside.summary .label{
+    font-size:.8rem; color:var(--ink-soft); margin-bottom:6px;
+  }
+  aside.summary .neto{
+    font-family:'Poppins',sans-serif;
+    font-weight:800;
+    font-size:clamp(1.8rem,3.4vw,2.5rem);
+    color:var(--gold);
+    line-height:1.1;
+    word-break:break-word;
+  }
+  .miniline{
+    display:flex; justify-content:space-between; gap:10px;
+    padding:7px 0; border-bottom:1px solid var(--rule);
+    font-size:.86rem;
+  }
+  .miniline:last-child{ border-bottom:none; }
+  .miniline .amt.pos{ color:var(--green); }
+  .miniline .amt.neg{ color:var(--brick); }
+  .subtotals{ margin-top:16px; padding-top:12px; border-top:1px solid var(--rule-strong); }
+
+  /* Full breakdown table */
+  .breakdown{
+    margin-top:8px;
+    grid-column:1/-1;
+  }
+  table.report{
+    width:100%; border-collapse:collapse; margin-top:14px; font-size:.88rem;
+  }
+  table.report caption{ text-align:left; font-size:1.2rem; margin-bottom:10px; }
+  table.report th, table.report td{
+    text-align:left; padding:9px 10px; border-bottom:1px solid var(--rule);
+  }
+  table.report th{
+    color:var(--ink-soft); font-weight:600; font-size:.78rem;
+    text-transform: none;
+    border-bottom:1px solid var(--rule-strong);
+  }
+  table.report td.num, table.report th.num{ text-align:right; }
+  table.report tr.total td{
+    border-top:2px solid var(--ink); font-weight:700; border-bottom:none;
+  }
+  table.report tr.neto td{ font-weight:700; color:var(--gold-deep); }
+
+  .fullwidth-section{
+    max-width:1180px; margin:0 auto; padding: 0 clamp(20px,5vw,64px) 70px;
+  }
+  .acta{
+    border:1px solid var(--rule-strong);
+    border-radius:4px;
+    padding: 26px 28px;
+    margin-top: 30px;
+    line-height:1.65;
+    font-size:.92rem;
+    background:var(--paper-raised);
+  }
+  .acta h3{ margin-bottom:12px; font-size:1.05rem; }
+  .acta .firmas{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:24px;
+    margin-top:46px;
+  }
+  @media (max-width:700px){ .acta .firmas{ grid-template-columns:1fr; } }
+  .acta .firmas div{ border-top:1px solid var(--ink-soft); padding-top:6px; font-size:.82rem; color:var(--ink-soft); text-align:center; }
+
+  /* PRO downloads + WhatsApp */
+  .pro-box{
+    border:1px solid var(--gold);
+    border-radius:4px;
+    padding: 26px 28px;
+    margin-top: 26px;
+    background:var(--paper-raised);
+  }
+  .pro-box h3{ font-size:1.05rem; margin-bottom:6px; }
+  .pro-box .price{
+    font-family:'Poppins',sans-serif; font-weight:700;
+    color:var(--gold-deep); font-size:1.3rem; margin:2px 0 14px;
+  }
+  .pro-grid{
+    display:grid; grid-template-columns: 150px 1fr; gap:22px; align-items:start;
+  }
+  @media (max-width:600px){ .pro-grid{ grid-template-columns:1fr; } }
+  .qr-box{
+    width:150px; height:150px; border:1px solid var(--rule-strong);
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    font-size:.72rem; color:var(--ink-soft); padding:8px; border-radius:3px;
+    background:#fff; overflow:hidden;
+  }
+  .qr-box img{ width:100%; height:100%; object-fit:contain; }
+  .unlock-row{ display:flex; gap:10px; margin:14px 0; flex-wrap:wrap; }
+  .unlock-row input{ flex:1; min-width:180px; }
+  .unlock-row button{
+    background:var(--brand-green); color:#fff; border:none; border-radius:3px;
+    padding:9px 18px; font-family:'Inter',sans-serif; font-weight:600; font-size:.88rem; cursor:pointer;
+  }
+  .pro-downloads{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+  .pro-downloads button{
+    background:var(--brand-teal); color:#fff; border:none; border-radius:3px;
+    padding:10px 18px; font-family:'Inter',sans-serif; font-weight:600; font-size:.88rem; cursor:pointer;
+  }
+  .pro-downloads button:disabled{ background:var(--rule-strong); color:var(--ink-soft); cursor:default; }
+  .wa-btn{
+    display:inline-flex; align-items:center; gap:8px;
+    background:#25D366; color:#fff; text-decoration:none;
+    border-radius:3px; padding:10px 18px; font-weight:600; font-size:.88rem;
+    margin-top:14px;
+  }
+  .wa-btn.secondary{ background:none; border:1px solid #25D366; color:var(--ink); }
+  .advisory-box{
+    border:1px solid var(--rule-strong); border-radius:4px;
+    padding:18px 20px; margin-top:18px;
+  }
+  .advisory-box p{ margin:0 0 4px; font-size:.88rem; color:var(--ink-soft); }
+  .advisory-box .price{ font-family:'Poppins',sans-serif; color:var(--gold-deep); font-weight:700; }
+
+  footer.notes{
+    max-width:1180px; margin:0 auto; padding: 0 clamp(20px,5vw,64px) 60px;
+    color:var(--ink-soft); font-size:.78rem; line-height:1.6;
+    border-top:1px solid var(--rule); padding-top:22px;
+  }
+
+  @media print{
+    header.top, .no-print{ display:none !important; }
+    aside.summary{ position:static; border:none; padding:0; }
+    main{ grid-template-columns:1fr; padding-top:0; }
+    body{ background:#fff; color:#000; }
+    .acta{ border:1px solid #999; background:#fff; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand-row"><span class="dot"></span><span>TRINOMIO SAS</span></div>
+  <div class="eyebrow">Liquidación de contrato de trabajo · Colombia</div>
+  <h1>Calculadora de liquidación</h1>
+  <p class="sub">Estima cesantías, intereses, prima, vacaciones e indemnización de un contrato de trabajo colombiano, con el desglose de devengados y deducciones para el acta de liquidación.</p>
+</header>
+
+<main>
+  <section class="card">
+
+    <div class="group">
+      <h2><span class="idx">1</span> Datos del empleado</h2>
+      <div class="grid">
+        <div class="field span2">
+          <label for="empresa">Empresa (razón social)</label>
+          <input type="text" id="empresa" placeholder="Trinomio SAS">
+        </div>
+        <div class="field span2">
+          <label for="nombre">Nombre completo del empleado</label>
+          <input type="text" id="nombre" placeholder="Nombre y apellidos">
+        </div>
+        <div class="field">
+          <label for="cedula">Cédula</label>
+          <input type="text" id="cedula" inputmode="numeric" placeholder="1007297245">
+        </div>
+        <div class="field">
+          <label for="cargo">Cargo</label>
+          <input type="text" id="cargo" placeholder="Último cargo">
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2><span class="idx">2</span> Contrato y fechas</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="fingreso">Fecha de ingreso</label>
+          <input type="date" id="fingreso">
+        </div>
+        <div class="field">
+          <label for="fretiro">Fecha de retiro</label>
+          <input type="date" id="fretiro">
+        </div>
+        <div class="field">
+          <label for="tipocontrato">Tipo de contrato</label>
+          <select id="tipocontrato">
+            <option value="indefinido">Término indefinido</option>
+            <option value="fijo">Término fijo</option>
+            <option value="obra">Obra o labor</option>
+          </select>
+        </div>
+        <div class="field span2">
+          <label for="causa">Causa de terminación (art. 61 y 62 CST)</label>
+          <select id="causa">
+            <option value="despido_sin_justa">Despido sin justa causa (por el empleador)</option>
+            <option value="despido_con_justa">Despido con justa causa (por el empleador) — art. 62 CST</option>
+            <option value="renuncia_voluntaria">Renuncia voluntaria (sin justa causa)</option>
+            <option value="renuncia_justa_causa">Renuncia con justa causa imputable al empleador — art. 62 CST</option>
+            <option value="mutuo_acuerdo">Mutuo acuerdo / mutuo consentimiento</option>
+            <option value="vencimiento_plazo">Vencimiento del plazo pactado (contrato a término fijo)</option>
+            <option value="terminacion_obra">Terminación de la obra o labor contratada</option>
+            <option value="liquidacion_empresa">Liquidación o clausura definitiva de la empresa</option>
+            <option value="fuerza_mayor">Fuerza mayor o caso fortuito</option>
+            <option value="muerte_trabajador">Muerte del trabajador</option>
+            <option value="pension_reconocida">Reconocimiento de pensión (vejez o invalidez)</option>
+            <option value="sentencia_judicial">Sentencia judicial ejecutoriada</option>
+          </select>
+        </div>
+        <div class="field checkline">
+          <input type="checkbox" id="generaIndemnizacion" checked>
+          <label for="generaIndemnizacion" style="margin:0;">Esta causal da lugar a indemnización (se marca sola según la causa elegida; ajústala si el caso lo amerita)</label>
+        </div>
+        <div class="field">
+          <label for="diaslicencia">Días de licencia no remunerada a descontar</label>
+          <input type="number" id="diaslicencia" value="0" min="0">
+        </div>
+        <div class="field">
+          <label for="diasrestantes">Si es fijo/obra: días restantes del plazo pactado</label>
+          <input type="number" id="diasrestantes" value="0" min="0">
+        </div>
+        <div class="field checkline">
+          <input type="checkbox" id="supera10smlmv">
+          <label for="supera10smlmv" style="margin:0;">El empleado devenga 10 SMLMV o más (afecta la indemnización en contrato indefinido)</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2><span class="idx">3</span> Salario y bases</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="salario">Último salario mensual</label>
+          <input type="number" id="salario" min="0" step="1000" placeholder="2354000">
+        </div>
+        <div class="field">
+          <label for="transporte">Auxilio de transporte mensual</label>
+          <input type="number" id="transporte" min="0" step="1000" value="0">
+          <span class="hint">Si tiene valor, se calcula solo por los días pendientes del mes final y se suma a la base de cesantías y prima.</span>
+        </div>
+        <div class="field">
+          <label for="diassalariopend">Días pendientes de salario y transporte del período final</label>
+          <input type="number" id="diassalariopend" min="0" max="30">
+          <span class="hint">Se calcula automáticamente según la fecha de retiro; puedes ajustarlo.</span>
+        </div>
+        <div class="field">
+          <label for="vacIni">Vacaciones pendientes — período desde</label>
+          <input type="date" id="vacIni">
+        </div>
+        <div class="field">
+          <label for="vacFin">Vacaciones pendientes — período hasta</label>
+          <input type="date" id="vacFin">
+        </div>
+        <div class="field">
+          <label for="diasvacpend">Días de vacaciones pendientes por disfrutar</label>
+          <input type="number" id="diasvacpend" min="0" step="0.01" value="0">
+          <span class="hint">Se calcula solo si llenas el rango de fechas; también puedes escribirlo directamente.</span>
+        </div>
+        <div class="field">
+          <label for="cesantiasant">Cesantías pendientes de años anteriores (valor)</label>
+          <input type="number" id="cesantiasant" min="0" step="1000" value="0">
+        </div>
+        <div class="field">
+          <label for="primaant">Prima pendiente de semestres anteriores (valor)</label>
+          <input type="number" id="primaant" min="0" step="1000" value="0">
+        </div>
+        <div class="field">
+          <label for="horasextras">Horas extras — promedio mensual (último año)</label>
+          <input type="number" id="horasextras" min="0" step="1000" value="0">
+        </div>
+        <div class="field">
+          <label for="comisiones">Comisiones — promedio mensual (último año)</label>
+          <input type="number" id="comisiones" min="0" step="1000" value="0">
+        </div>
+        <div class="field span2">
+          <span class="hint">El promedio de horas extras y comisiones del último año, y las bonificaciones marcadas como "Prestacional" en la sección 4, se suman a la base con la que se calculan cesantías, intereses, prima y vacaciones, tal como lo exige la ley para salario variable.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2><span class="idx">4</span> Otros devengados</h2>
+      <p class="hint" style="margin:-4px 0 12px;">Marca "Prestacional" si la bonificación constituye salario (no fue pactada como no salarial bajo el art. 128 CST). Al marcarla, su valor se suma automáticamente a la base de aportes a salud/pensión y a la base de cesantías, prima y vacaciones.</p>
+      <div id="devengadosExtra"></div>
+      <button type="button" class="addline no-print" id="addDevengado">+ Agregar otro devengado (bonificación, comisión, etc.)</button>
+    </div>
+
+    <div class="group">
+      <h2><span class="idx">5</span> Deducciones</h2>
+      <div class="grid" style="margin-bottom:14px;">
+        <div class="field">
+          <label for="pctsalud">% Salud empleado</label>
+          <input type="number" id="pctsalud" step="0.01" value="4">
+        </div>
+        <div class="field">
+          <label for="pctpension">% Pensión empleado</label>
+          <input type="number" id="pctpension" step="0.01" value="4">
+        </div>
+        <div class="field">
+          <label for="retefuente">Retención en la fuente (valor manual)</label>
+          <input type="number" id="retefuente" min="0" step="1000" value="0">
+        </div>
+      </div>
+      <div id="deduccionesExtra"></div>
+      <button type="button" class="addline no-print" id="addDeduccion">+ Agregar otra deducción (crédito, libranza, embargo)</button>
+    </div>
+
+    <div class="actions no-print">
+      <button type="button" class="primary" id="btnCalcular">Calcular liquidación</button>
+      <button type="button" class="ghost" id="btnLimpiar">Limpiar</button>
+      <button type="button" class="ghost" id="btnImprimir">Imprimir / PDF</button>
+    </div>
+    <p class="hint no-print" style="margin-top:10px;">Completa los datos y presiona "Calcular liquidación" para ver el desglose; los resultados no se actualizan solos mientras escribes.</p>
+  </section>
+
+  <aside class="summary" id="summaryPanel">
+    <div class="label">Neto a pagar</div>
+    <div class="neto num" id="netoDisplay">$ 0</div>
+    <div class="subtotals" id="miniBreakdown"></div>
+  </aside>
+</main>
+
+<div class="fullwidth-section breakdown" id="breakdownSection" style="display:none;">
+  <table class="report" id="reportTable">
+    <caption>Desglose de la liquidación</caption>
+    <thead>
+      <tr><th>Concepto</th><th class="num">Cantidad (días)</th><th class="num">Devengado</th><th class="num">Deducido</th></tr>
+    </thead>
+    <tbody id="reportBody"></tbody>
+    <tfoot id="reportFoot"></tfoot>
+  </table>
+
+  <div class="acta" id="actaSection">
+    <h3>Constancia de recibo de prestaciones sociales e indemnización</h3>
+    <p id="actaTexto"></p>
+    <p id="actaFechaTexto">Para constancia se firma la presente en la ciudad de Bogotá a los ______ días del mes de ______________ de ________.</p>
+    <div class="firmas">
+      <div>Elaboró</div>
+      <div>Revisó</div>
+      <div>Recibido por</div>
+    </div>
+  </div>
+
+  <div class="pro-box no-print">
+    <h3>Descarga en PDF y plantilla Excel</h3>
+    <div class="price" id="proPriceDisplay">$ 15.000 COP · pago único por liquidación</div>
+    <div class="pro-grid">
+      <div class="qr-box" id="qrBox"><img src="assets/QR%20PAGOS.png" alt="QR de pago Nequi/Bancolombia - Trinomio SAS" onerror="this.parentElement.textContent='No se encontró assets/QR PAGOS.png junto a este archivo';"></div>
+      <div>
+        <p class="hint" style="margin:0 0 10px;">1. Escanea el QR y paga el valor indicado. 2. Envía el comprobante por WhatsApp con el botón de abajo — llega con el nombre y el neto de esta liquidación para que lo identifiques rápido. 3. Te respondemos con un código de acceso de un solo uso para desbloquear la descarga.</p>
+        <a href="#" target="_blank" class="wa-btn" id="waPagoBtn">Enviar comprobante por WhatsApp</a>
+        <div class="unlock-row">
+          <input type="text" id="proCode" placeholder="Código de acceso">
+          <button type="button" id="btnUnlock">Desbloquear</button>
+        </div>
+        <div class="pro-downloads" id="proDownloads" style="display:none;">
+          <button type="button" id="btnPDF" disabled>Descargar PDF</button>
+          <button type="button" id="btnExcel" disabled>Descargar plantilla Excel</button>
+        </div>
+        <p class="hint" id="proMsg" style="margin-top:10px;"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="advisory-box no-print">
+    <p>¿Necesitas revisar este caso con un asesor?</p>
+    <p class="price">Asesoría directa por WhatsApp — $50.000 COP quincenal</p>
+    <a href="#" target="_blank" class="wa-btn secondary" id="waAsesoriaBtn">Contratar asesoría por WhatsApp</a>
+  </div>
+</div>
+
+<footer class="notes">
+  Esta calculadora aplica las fórmulas estándar de liquidación laboral en Colombia (año de 360 días / mes de 30 días) para cesantías, intereses sobre cesantías, prima de servicios, vacaciones e indemnización en contrato a término indefinido conforme al artículo 64 del CST. Los aportes a salud y pensión se calculan sobre el salario del período final pendiente de pago. Para contratos a término fijo u obra o labor, la indemnización se estima sobre los días restantes indicados manualmente. Verifica siempre los parámetros legales vigentes (SMLMV, auxilio de transporte, tarifas de aportes) antes de usar el resultado como liquidación definitiva.
+</footer>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const fmt = n => (isFinite(n)?n:0).toLocaleString('es-CO', {style:'currency', currency:'COP', maximumFractionDigits:0});
+  const fmtDias = n => (isFinite(n)?n:0).toLocaleString('es-CO', {maximumFractionDigits:2});
+
+  // ============ CONFIGURACIÓN — EDITA ESTOS VALORES ============
+  // Número de WhatsApp de Trinomio SAS, con indicativo de país, SIN "+" ni espacios (ej. 573001234567).
+  const WHATSAPP_NUMBER = '573219246512'; // ← REEMPLAZA por el número real
+  // Precio del desbloqueo de PDF + Excel por liquidación (pago único).
+  const PRO_PRICE = 15000;
+  // Precio de la asesoría directa quincenal.
+  const ADVISORY_PRICE = 50000;
+  // Código(s) de acceso válidos para desbloquear la descarga. Cámbialo cuando quieras (rotarlo periódicamente
+  // da algo más de control, aunque no reemplaza una validación de pago real).
+  const PRO_ACCESS_CODES = ['TRINOMIOPRO'];
+  // ================================================================
+
+  $('proPriceDisplay').textContent = `${fmt(PRO_PRICE)} · pago único por liquidación`;
+  document.querySelector('.advisory-box .price').textContent = `Asesoría directa por WhatsApp — ${fmt(ADVISORY_PRICE)} quincenal`;
+
+  let lastResult = null; // datos de la última liquidación calculada, usados por el PDF/Excel
+  let proUnlocked = false;
+
+  function parseDate(str){
+    if(!str) return null;
+    const [y,m,d] = str.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }
+
+  // 30/360 day-count convention used in Colombian payroll liquidations
+  function days360(d1, d2, inclusive){
+    let day1 = d1.getDate(), month1 = d1.getMonth()+1, year1 = d1.getFullYear();
+    let day2 = d2.getDate(), month2 = d2.getMonth()+1, year2 = d2.getFullYear();
+    if(day1 === 31) day1 = 30;
+    if(day2 === 31 && day1 === 30) day2 = 30;
+    let n = (year2-year1)*360 + (month2-month1)*30 + (day2-day1);
+    return inclusive ? n+1 : n;
+  }
+
+  function maxDate(a,b){ return a > b ? a : b; }
+
+  // ---- dynamic extra rows ----
+  function addRow(containerId, placeholderText, withPrestacional){
+    const container = $(containerId);
+    const row = document.createElement('div');
+    row.className = 'rowline' + (withPrestacional ? ' rowline-dev' : '');
+    if(withPrestacional){
+      row.innerHTML = `
+        <input type="text" placeholder="${placeholderText}" class="desc">
+        <input type="number" placeholder="Valor" min="0" step="1000" class="val">
+        <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:var(--ink-soft);white-space:nowrap;">
+          <input type="checkbox" class="prest" style="width:auto;"> Prestacional
+        </label>
+        <button type="button" class="del" aria-label="Eliminar línea">×</button>
+      `;
+    } else {
+      row.innerHTML = `
+        <input type="text" placeholder="${placeholderText}" class="desc">
+        <input type="number" placeholder="Valor" min="0" step="1000" class="val">
+        <button type="button" class="del" aria-label="Eliminar línea">×</button>
+      `;
+    }
+    row.querySelector('.del').addEventListener('click', ()=>{ row.remove(); });
+    container.appendChild(row);
+  }
+  $('addDevengado').addEventListener('click', ()=> addRow('devengadosExtra','Descripción (ej. bonificación)', true));
+  $('addDeduccion').addEventListener('click', ()=> addRow('deduccionesExtra','Descripción (ej. libranza Bancolombia)', false));
+
+  function extraLines(containerId, withPrestacional){
+    return Array.from($(containerId).querySelectorAll('.rowline')).map(r=>{
+      const desc = r.querySelector('.desc').value.trim() || 'Concepto adicional';
+      const val = parseFloat(r.querySelector('.val').value) || 0;
+      const prest = withPrestacional ? (r.querySelector('.prest') ? r.querySelector('.prest').checked : false) : false;
+      return {desc, val, prest};
+    }).filter(l => l.val !== 0 || l.desc !== 'Concepto adicional');
+  }
+
+  // ---- auto-fill días pendientes de salario when fecha retiro changes ----
+  $('fretiro').addEventListener('change', ()=>{
+    const fr = parseDate($('fretiro').value);
+    if(fr){
+      const d = Math.min(fr.getDate(), 30);
+      $('diassalariopend').value = d;
+      if(!$('vacFin').value) $('vacFin').value = $('fretiro').value;
+    }
+  });
+
+  // ---- auto-fill días de vacaciones pendientes from the date range ----
+  function recalcVacRange(){
+    const vi = parseDate($('vacIni').value);
+    const vf = parseDate($('vacFin').value);
+    if(vi && vf && vf >= vi){
+      $('diasvacpend').value = days360(vi, vf, true);
+    }
+  }
+  $('vacIni').addEventListener('change', recalcVacRange);
+  $('vacFin').addEventListener('change', recalcVacRange);
+
+  // ---- causal de terminación → indica por defecto si genera indemnización ----
+  const CAUSAL_INDEMNIZA = {
+    despido_sin_justa: true,
+    despido_con_justa: false,
+    renuncia_voluntaria: false,
+    renuncia_justa_causa: true,
+    mutuo_acuerdo: false,
+    vencimiento_plazo: false,
+    terminacion_obra: false,
+    liquidacion_empresa: true,
+    fuerza_mayor: false,
+    muerte_trabajador: false,
+    pension_reconocida: false,
+    sentencia_judicial: false,
+  };
+  $('causa').addEventListener('change', ()=>{
+    $('generaIndemnizacion').checked = !!CAUSAL_INDEMNIZA[$('causa').value];
+  });
+
+  function indemnizacionDias(tenureDays, supera10){
+    const base = supera10 ? 20 : 30;
+    const extra = supera10 ? 15 : 20;
+    if(tenureDays <= 360) return base;
+    const extraYears = (tenureDays - 360) / 360;
+    return base + extra * extraYears;
+  }
+
+  function recalc(){
+    const fingreso = parseDate($('fingreso').value);
+    const fretiro = parseDate($('fretiro').value);
+    const salario = parseFloat($('salario').value) || 0;
+    const transporte = parseFloat($('transporte').value) || 0;
+    const diasLicencia = parseFloat($('diaslicencia').value) || 0;
+    const tipoContrato = $('tipocontrato').value;
+    const generaIndemnizacion = $('generaIndemnizacion').checked;
+    const supera10 = $('supera10smlmv').checked;
+    const diasRestantesPactado = parseFloat($('diasrestantes').value) || 0;
+    const diasVacPend = parseFloat($('diasvacpend').value) || 0;
+    const cesantiasAnt = parseFloat($('cesantiasant').value) || 0;
+    const primaAnt = parseFloat($('primaant').value) || 0;
+    const horasExtras = parseFloat($('horasextras').value) || 0;
+    const comisiones = parseFloat($('comisiones').value) || 0;
+    const pctSalud = (parseFloat($('pctsalud').value) || 0)/100;
+    const pctPension = (parseFloat($('pctpension').value) || 0)/100;
+    const reteFuente = parseFloat($('retefuente').value) || 0;
+    let diasSalarioPend = parseFloat($('diassalariopend').value);
+    if(isNaN(diasSalarioPend)) diasSalarioPend = 0;
+
+    let diasTotales = 0, diasNetos = 0;
+    if(fingreso && fretiro && fretiro >= fingreso){
+      diasTotales = days360(fingreso, fretiro, true);
+      diasNetos = Math.max(diasTotales - diasLicencia, 0);
+    }
+
+    const devExtra = extraLines('devengadosExtra', true);
+    const dedExtra = extraLines('deduccionesExtra', false);
+    const sumDevExtra = devExtra.reduce((a,l)=>a+l.val,0);
+    const sumDedExtra = dedExtra.reduce((a,l)=>a+l.val,0);
+    const sumDevPrestacional = devExtra.filter(l=>l.prest).reduce((a,l)=>a+l.val,0);
+
+    // salario variable (horas extras, comisiones y bonificaciones prestacionales) integra la base
+    const variableSalarial = horasExtras + comisiones + sumDevPrestacional;
+    const baseCesantias = salario + transporte + variableSalarial;
+    const basePrima = baseCesantias;
+    const baseVacaciones = salario + variableSalarial;
+    const salarioDiario = salario / 30;
+    const transporteDiario = transporte / 30;
+
+    // pending cesantías period: from Jan 1 of año retiro (or fecha ingreso if later) to fecha retiro
+    let diasCesantiasPend = 0, diasPrimaPend = 0;
+    if(fretiro && fingreso){
+      const anio = fretiro.getFullYear();
+      const inicioAnio = new Date(anio,0,1);
+      const inicioCes = maxDate(inicioAnio, fingreso);
+      diasCesantiasPend = fretiro >= inicioCes ? days360(inicioCes, fretiro, true) : 0;
+
+      const mes = fretiro.getMonth()+1;
+      const inicioSemestre = mes <= 6 ? new Date(anio,0,1) : new Date(anio,6,1);
+      const inicioPrima = maxDate(inicioSemestre, fingreso);
+      diasPrimaPend = fretiro >= inicioPrima ? days360(inicioPrima, fretiro, true) : 0;
+    }
+
+    const salarioPendiente = salarioDiario * diasSalarioPend;
+    const transportePendiente = transporteDiario * diasSalarioPend;
+    const cesantias = (baseCesantias * diasCesantiasPend) / 360 + cesantiasAnt;
+    const interesesCesantias = ((baseCesantias * diasCesantiasPend) / 360) * diasCesantiasPend * 0.12 / 360;
+    const prima = (basePrima * diasPrimaPend) / 360 + primaAnt;
+    const vacaciones = (baseVacaciones/30) * diasVacPend;
+
+    let indemnizacion = 0, diasIndemnizacion = 0;
+    if(generaIndemnizacion){
+      if(tipoContrato === 'indefinido'){
+        diasIndemnizacion = indemnizacionDias(diasTotales, supera10);
+        indemnizacion = salarioDiario * diasIndemnizacion;
+      } else {
+        diasIndemnizacion = diasRestantesPactado;
+        indemnizacion = salarioDiario * diasIndemnizacion;
+      }
+    }
+
+    // aportes sobre el salario ordinario del período final + devengados que sí constituyen salario
+    const baseAportes = salarioPendiente + sumDevPrestacional;
+    const salud = baseAportes * pctSalud;
+    const pension = baseAportes * pctPension;
+
+    const totalDevengado = salarioPendiente + transportePendiente + cesantias + interesesCesantias + prima + vacaciones + indemnizacion + sumDevExtra;
+    const totalDeducido = salud + pension + reteFuente + sumDedExtra;
+    const neto = totalDevengado - totalDeducido;
+
+    // ---- mini summary ----
+    $('netoDisplay').textContent = fmt(neto);
+    const mini = $('miniBreakdown');
+    mini.innerHTML = '';
+    const miniItems = [
+      ['Total devengado', totalDevengado, 'pos'],
+      ['Total deducido', -totalDeducido, 'neg'],
+    ];
+    miniItems.forEach(([label,val,cls])=>{
+      const row = document.createElement('div');
+      row.className = 'miniline';
+      row.innerHTML = `<span>${label}</span><span class="amt num ${cls}">${fmt(val)}</span>`;
+      mini.appendChild(row);
+    });
+    const diasRow = document.createElement('div');
+    diasRow.className = 'miniline';
+    diasRow.innerHTML = `<span>Días totales de servicio</span><span class="amt num">${fmtDias(diasTotales)}</span>`;
+    mini.appendChild(diasRow);
+
+    // ---- full report table ----
+    const rows = [
+      ['Salario (días pendientes del período)', diasSalarioPend, salarioPendiente, 0],
+      ['Auxilio de transporte', diasSalarioPend, transportePendiente, 0],
+      ['Cesantías', diasCesantiasPend, cesantias, 0],
+      ['Intereses sobre cesantías', diasCesantiasPend, interesesCesantias, 0],
+      ['Prima de servicios', diasPrimaPend, prima, 0],
+      ['Vacaciones', diasVacPend, vacaciones, 0],
+    ];
+    if(indemnizacion > 0){
+      rows.push(['Indemnización', diasIndemnizacion, indemnizacion, 0]);
+    }
+    devExtra.forEach(l => rows.push([l.desc + (l.prest ? ' (prestacional)' : ' (no salarial)'), 0, l.val, 0]));
+    rows.push(['Salud empleado', diasSalarioPend, 0, salud]);
+    rows.push(['Pensión empleado', diasSalarioPend, 0, pension]);
+    if(reteFuente>0) rows.push(['Retención en la fuente', 0, 0, reteFuente]);
+    dedExtra.forEach(l => rows.push([l.desc, 0, 0, l.val]));
+
+    const tbody = $('reportBody');
+    tbody.innerHTML = '';
+    rows.forEach(([desc, dias, dev, ded])=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${desc}</td><td class="num">${fmtDias(dias)}</td><td class="num">${dev?fmt(dev):'—'}</td><td class="num">${ded?fmt(ded):'—'}</td>`;
+      tbody.appendChild(tr);
+    });
+    const tfoot = $('reportFoot');
+    tfoot.innerHTML = `
+      <tr class="total"><td>Totales</td><td></td><td class="num">${fmt(totalDevengado)}</td><td class="num">${fmt(totalDeducido)}</td></tr>
+      <tr class="neto"><td>Neto a pagar</td><td></td><td></td><td class="num">${fmt(neto)}</td>
+    `;
+    $('breakdownSection').style.display = 'block';
+
+    // ---- acta text ----
+    const nombre = $('nombre').value.trim() || '____________________';
+    const empresa = $('empresa').value.trim() || '____________________';
+    const cedula = $('cedula').value.trim() || '____________________';
+    $('actaTexto').textContent = `Yo, ${nombre}, identificado(a) con cédula de ciudadanía No. ${cedula} como aparece al pie de mi firma, declaro que he recibido a satisfacción de ${empresa} la cantidad de ${fmt(neto)} que corresponde al saldo total del sueldo y de las prestaciones sociales que devengué en esta institución hasta la fecha. Así mismo hago constar que con el pago anteriormente mencionado, ${empresa} ha quedado totalmente a paz y salvo para conmigo por concepto de sueldos, cesantías, subsidio de transporte, intereses, vacaciones, prima de servicios, horas extras, dominicales y festivos, recargo nocturno, descansos, compensatorios, indemnizaciones y en general por todo concepto emanado de la relación laboral.`;
+
+    const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    let actaFecha;
+    if(fretiro){
+      const dia = fretiro.getDate();
+      const mes = MESES[fretiro.getMonth()];
+      const anio = fretiro.getFullYear();
+      actaFecha = `Para constancia se firma la presente en la ciudad de Bogotá a los ${dia} días del mes de ${mes} de ${anio}.`;
+    } else {
+      actaFecha = 'Para constancia se firma la presente en la ciudad de Bogotá a los ______ días del mes de ______________ de ________.';
+    }
+    $('actaFechaTexto').textContent = actaFecha;
+
+    // ---- guardar resultado para exportar a PDF / Excel ----
+    lastResult = {
+      empresa, nombre, cedula,
+      cargo: $('cargo').value.trim(),
+      fingresoStr: $('fingreso').value, fretiroStr: $('fretiro').value,
+      rows, totalDevengado, totalDeducido, neto,
+      actaTexto: $('actaTexto').textContent, actaFecha,
+      pdfDownloaded: false, excelDownloaded: false,
+    };
+    $('btnPDF').disabled = !proUnlocked;
+    $('btnExcel').disabled = !proUnlocked;
+    $('btnPDF').textContent = 'Descargar PDF';
+    $('btnExcel').textContent = 'Descargar plantilla Excel';
+
+    // ---- enlaces de WhatsApp (pago y asesoría) ----
+    const msgPago = `Hola Trinomio SAS, ya realicé el pago de ${fmt(PRO_PRICE)} para desbloquear el PDF y Excel de la liquidación de ${nombre} (cédula ${cedula}), neto a pagar ${fmt(neto)}. Adjunto el comprobante.`;
+    $('waPagoBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msgPago)}`;
+    const msgAsesoria = `Hola Trinomio SAS, quiero contratar la asesoría directa quincenal (${fmt(ADVISORY_PRICE)}) para la liquidación de ${nombre}.`;
+    $('waAsesoriaBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msgAsesoria)}`;
+  }
+
+  $('btnCalcular').addEventListener('click', recalc);
+  $('btnImprimir').addEventListener('click', ()=>{ recalc(); window.print(); });
+  $('btnLimpiar').addEventListener('click', ()=>{
+    document.querySelectorAll('input[type=text], input[type=number], input[type=date]').forEach(i=>{
+      if(i.type==='number' && (i.id==='pctsalud')) { i.value = 4; }
+      else if(i.type==='number' && (i.id==='pctpension')) { i.value = 4; }
+      else i.value = '';
+    });
+    document.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);
+    $('devengadosExtra').innerHTML = '';
+    $('deduccionesExtra').innerHTML = '';
+    $('tipocontrato').value = 'indefinido';
+    $('causa').value = 'despido_sin_justa';
+    $('generaIndemnizacion').checked = true;
+    $('breakdownSection').style.display = 'none';
+    $('netoDisplay').textContent = fmt(0);
+    $('miniBreakdown').innerHTML = '';
+    $('actaFechaTexto').textContent = 'Para constancia se firma la presente en la ciudad de Bogotá a los ______ días del mes de ______________ de ________.';
+    lastResult = null;
+    $('btnPDF').disabled = true;
+    $('btnExcel').disabled = true;
+    $('btnPDF').textContent = 'Descargar PDF';
+    $('btnExcel').textContent = 'Descargar plantilla Excel';
+    $('proMsg').textContent = '';
+  });
+
+  // ---- WhatsApp asesoría: enlace por defecto disponible desde el inicio ----
+  $('waAsesoriaBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola Trinomio SAS, quiero contratar la asesoría directa quincenal ('+fmt(ADVISORY_PRICE)+') para mi liquidación de contrato.')}`;
+
+  // ---- desbloqueo PRO ----
+  $('btnUnlock').addEventListener('click', ()=>{
+    const code = $('proCode').value.trim().toUpperCase();
+    if(code && PRO_ACCESS_CODES.includes(code)){
+      proUnlocked = true;
+      $('proDownloads').style.display = 'flex';
+      $('btnPDF').disabled = !lastResult;
+      $('btnExcel').disabled = !lastResult;
+      $('proMsg').textContent = lastResult
+        ? 'Acceso desbloqueado. Ya puedes descargar el PDF y el Excel de esta liquidación.'
+        : 'Acceso desbloqueado. Calcula la liquidación para habilitar la descarga.';
+      $('proMsg').style.color = 'var(--green)';
+    } else {
+      $('proMsg').textContent = 'Código no válido. Si ya pagaste, escríbenos por WhatsApp y te lo confirmamos.';
+      $('proMsg').style.color = 'var(--brick)';
+    }
+  });
+
+  // ---- guardar archivo: usa la capacidad "downloads" del artifact si existe, si no cae a descarga normal ----
+  async function saveFile(filename, blob){
+    if(window.claude && typeof window.claude.use === 'function'){
+      try{
+        const downloads = await window.claude.use('downloads');
+        if(downloads){
+          await downloads.save({filename, data: blob});
+          return;
+        }
+      }catch(e){ /* sigue al método normal */ }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  }
+
+  function buildPDF(){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    let y = 18;
+    doc.setFont('helvetica','bold'); doc.setFontSize(15);
+    doc.text('Liquidación de contrato', 14, y); y += 8;
+    doc.setFontSize(10); doc.setFont('helvetica','normal');
+    doc.text(`Empresa: ${lastResult.empresa || '-'}`, 14, y); y += 5;
+    doc.text(`Empleado: ${lastResult.nombre || '-'}    Cédula: ${lastResult.cedula || '-'}`, 14, y); y += 5;
+    doc.text(`Cargo: ${lastResult.cargo || '-'}`, 14, y); y += 5;
+    doc.text(`Fecha ingreso: ${lastResult.fingresoStr || '-'}    Fecha retiro: ${lastResult.fretiroStr || '-'}`, 14, y); y += 8;
+
+    doc.setFont('helvetica','bold');
+    doc.text('Concepto', 14, y);
+    doc.text('Días', 112, y, {align:'right'});
+    doc.text('Devengado', 152, y, {align:'right'});
+    doc.text('Deducido', 196, y, {align:'right'});
+    y += 2; doc.setLineWidth(0.2); doc.line(14, y, 196, y); y += 5;
+    doc.setFont('helvetica','normal');
+    lastResult.rows.forEach(([desc,dias,dev,ded])=>{
+      if(y > 270){ doc.addPage(); y = 18; }
+      doc.text(String(desc).slice(0,58), 14, y);
+      doc.text(dias ? fmtDias(dias) : '', 112, y, {align:'right'});
+      doc.text(dev ? fmt(dev) : '—', 152, y, {align:'right'});
+      doc.text(ded ? fmt(ded) : '—', 196, y, {align:'right'});
+      y += 6;
+    });
+    y += 1; doc.setLineWidth(0.4); doc.line(14, y, 196, y); y += 6;
+    doc.setFont('helvetica','bold');
+    doc.text('Totales', 14, y);
+    doc.text(fmt(lastResult.totalDevengado), 152, y, {align:'right'});
+    doc.text(fmt(lastResult.totalDeducido), 196, y, {align:'right'});
+    y += 8;
+    doc.setFontSize(12);
+    doc.text(`Neto a pagar: ${fmt(lastResult.neto)}`, 14, y);
+    y += 12;
+
+    doc.setFontSize(10); doc.setFont('helvetica','bold');
+    doc.text('Constancia de recibo de prestaciones sociales e indemnización', 14, y); y += 6;
+    doc.setFont('helvetica','normal');
+    const actaLines = doc.splitTextToSize(lastResult.actaTexto, 182);
+    if(y + actaLines.length*4.6 > 280){ doc.addPage(); y = 18; }
+    doc.text(actaLines, 14, y); y += actaLines.length*4.6 + 4;
+    const fechaLines = doc.splitTextToSize(lastResult.actaFecha, 182);
+    doc.text(fechaLines, 14, y); y += fechaLines.length*4.6 + 18;
+
+    if(y > 270){ doc.addPage(); y = 40; }
+    doc.text('____________________', 14, y);
+    doc.text('____________________', 82, y);
+    doc.text('____________________', 150, y);
+    y += 5;
+    doc.setFontSize(8);
+    doc.text('Elaboró', 14, y);
+    doc.text('Revisó', 82, y);
+    doc.text('Recibido por', 150, y);
+
+    return doc.output('blob');
+  }
+
+  function buildExcel(){
+    const wsData = [
+      ['Liquidación de contrato'],
+      ['Empresa', lastResult.empresa || ''],
+      ['Empleado', lastResult.nombre || ''],
+      ['Cédula', lastResult.cedula || ''],
+      ['Cargo', lastResult.cargo || ''],
+      ['Fecha ingreso', lastResult.fingresoStr || ''],
+      ['Fecha retiro', lastResult.fretiroStr || ''],
+      [],
+      ['Concepto', 'Días', 'Devengado', 'Deducido'],
+    ];
+    lastResult.rows.forEach(([desc,dias,dev,ded])=> wsData.push([desc, dias||0, dev||0, ded||0]));
+    wsData.push(['Totales', '', lastResult.totalDevengado, lastResult.totalDeducido]);
+    wsData.push(['Neto a pagar', '', '', lastResult.neto]);
+    wsData.push([]);
+    wsData.push(['Constancia de recibo']);
+    wsData.push([lastResult.actaTexto]);
+    wsData.push([lastResult.actaFecha]);
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{wch:48},{wch:12},{wch:16},{wch:16}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Liquidación');
+    const out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+    return new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  }
+
+  $('btnPDF').addEventListener('click', async ()=>{
+    if(!proUnlocked || !lastResult) return;
+    try{
+      const blob = buildPDF();
+      const filename = `Liquidacion_${(lastResult.nombre||'empleado').trim().replace(/\s+/g,'_') || 'empleado'}.pdf`;
+      await saveFile(filename, blob);
+      $('btnPDF').textContent = 'PDF descargado ✓';
+      $('btnPDF').disabled = true;
+    }catch(e){ $('proMsg').textContent = 'No se pudo generar el PDF. Intenta de nuevo.'; }
+  });
+
+  $('btnExcel').addEventListener('click', async ()=>{
+    if(!proUnlocked || !lastResult) return;
+    try{
+      const blob = buildExcel();
+      const filename = `Liquidacion_${(lastResult.nombre||'empleado').trim().replace(/\s+/g,'_') || 'empleado'}.xlsx`;
+      await saveFile(filename, blob);
+      $('btnExcel').textContent = 'Excel descargado ✓';
+      $('btnExcel').disabled = true;
+    }catch(e){ $('proMsg').textContent = 'No se pudo generar el Excel. Intenta de nuevo.'; }
+  });
+})();
+
+</script>
+</body>
+</html>
