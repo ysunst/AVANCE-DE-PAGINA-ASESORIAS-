@@ -367,6 +367,30 @@
   .advisory-box p{ margin:0 0 4px; font-size:.88rem; color:var(--ink-soft); }
   .advisory-box .price{ font-family:'Poppins',sans-serif; color:var(--gold-deep); font-weight:700; }
 
+  .reviews-box{
+    border:1px solid var(--rule-strong); border-radius:4px;
+    padding:20px 22px; margin-top:18px;
+  }
+  .reviews-box h3{ margin-bottom:4px; }
+  .star-picker{ display:flex; gap:4px; margin:8px 0 12px; }
+  .star-picker .star{
+    background:none; border:none; font-size:1.7rem; line-height:1; cursor:pointer;
+    color:var(--rule-strong); padding:0;
+  }
+  .star-picker .star.active{ color:var(--gold); }
+  #reviewText{
+    width:100%; font-family:'Inter',sans-serif; font-size:.92rem;
+    border:1px solid var(--rule-strong); border-radius:3px; padding:10px;
+    background:var(--paper-raised); color:var(--ink); resize:vertical; margin-bottom:10px;
+  }
+  .published-reviews{ margin-top:18px; display:grid; gap:12px; }
+  .review-card{
+    border:1px solid var(--rule); border-radius:4px; padding:12px 14px; background:var(--paper-raised);
+  }
+  .review-stars{ color:var(--gold); font-size:1rem; margin-bottom:4px; letter-spacing:1px; }
+  .review-text{ font-size:.9rem; color:var(--ink); margin:0 0 4px; }
+  .review-name{ font-size:.8rem; color:var(--ink-soft); margin:0; }
+
   footer.notes{
     max-width:1180px; margin:0 auto; padding: 0 clamp(20px,5vw,64px) 60px;
     color:var(--ink-soft); font-size:.78rem; line-height:1.6;
@@ -401,13 +425,27 @@
           <label for="empresa">Empresa (razón social)</label>
           <input type="text" id="empresa" placeholder="Trinomio SAS">
         </div>
+        <div class="field">
+          <label for="nit">NIT del empleador</label>
+          <input type="text" id="nit" inputmode="numeric" placeholder="900123456-7">
+        </div>
+        <div class="field">
+          <label for="logoInput">Logo de la empresa (opcional, para membrete)</label>
+          <input type="file" id="logoInput" accept="image/png,image/jpeg">
+          <span class="hint" id="logoHint">Si lo subes, se usa como encabezado en el PDF; en el Excel solo se agrega el nombre y NIT (la librería gratuita no soporta imágenes).</span>
+        </div>
+        <div class="field span2" id="logoPreviewWrap" style="display:none;">
+          <label>Vista previa del membrete</label>
+          <img id="logoPreview" alt="Logo de la empresa" style="max-height:60px; max-width:220px; object-fit:contain; border:1px solid var(--rule-strong); border-radius:3px; padding:4px; background:#fff;">
+          <button type="button" class="addline" id="btnQuitarLogo" style="width:auto; margin-top:6px; padding:6px 12px;">Quitar logo</button>
+        </div>
         <div class="field span2">
           <label for="nombre">Nombre completo del empleado</label>
           <input type="text" id="nombre" placeholder="Nombre y apellidos">
         </div>
         <div class="field">
           <label for="cedula">Cédula</label>
-          <input type="text" id="cedula" inputmode="numeric" placeholder="1007297245">
+          <input type="text" id="cedula" inputmode="numeric" placeholder="1234">
         </div>
         <div class="field">
           <label for="cargo">Cargo</label>
@@ -479,9 +517,9 @@
           <input type="number" id="salario" min="0" step="1000" placeholder="2354000">
         </div>
         <div class="field">
-          <label for="transporte">Auxilio de transporte mensual</label>
-          <input type="number" id="transporte" min="0" step="1000" value="0">
-          <span class="hint">Si tiene valor, se calcula solo por los días pendientes del mes final y se suma a la base de cesantías y prima.</span>
+          <label for="transporte">Auxilio de transporte mensual (calculado)</label>
+          <input type="number" id="transporte" min="0" step="1000" value="0" readonly style="background:var(--paper); color:var(--ink-soft); cursor:not-allowed;">
+          <span class="hint" id="transporteHint">Se calcula solo: aplica $249.095 (2026) si el salario es de hasta 2 SMLMV ($3.501.810); si es mayor, no aplica.</span>
         </div>
         <div class="field">
           <label for="diassalariopend">Días pendientes de salario y transporte del período final</label>
@@ -489,17 +527,32 @@
           <span class="hint">Se calcula automáticamente según la fecha de retiro; puedes ajustarlo.</span>
         </div>
         <div class="field">
-          <label for="vacIni">Vacaciones pendientes — período desde</label>
+          <label for="horasExtrasMes">Horas extras del mes en curso (valor)</label>
+          <input type="number" id="horasExtrasMes" min="0" step="1000" value="0">
+        </div>
+        <div class="field">
+          <label for="recargosMes">Recargos ordinarios o nocturnos del mes en curso (valor)</label>
+          <input type="number" id="recargosMes" min="0" step="1000" value="0">
+        </div>
+        <div class="field">
+          <label for="dominicalesMes">Domingos y festivos del mes en curso (valor)</label>
+          <input type="number" id="dominicalesMes" min="0" step="1000" value="0">
+        </div>
+        <div class="field span2">
+          <span class="hint" id="valorMesHint">Valor total a pagar del mes en curso: $ 0</span>
+        </div>
+        <div class="field">
+          <label for="vacIni">Días trabajados sin disfrutar vacaciones — desde</label>
           <input type="date" id="vacIni">
         </div>
         <div class="field">
-          <label for="vacFin">Vacaciones pendientes — período hasta</label>
+          <label for="vacFin">Días trabajados sin disfrutar vacaciones — hasta</label>
           <input type="date" id="vacFin">
         </div>
         <div class="field">
-          <label for="diasvacpend">Días de vacaciones pendientes por disfrutar</label>
-          <input type="number" id="diasvacpend" min="0" step="0.01" value="0">
-          <span class="hint">Se calcula solo si llenas el rango de fechas; también puedes escribirlo directamente.</span>
+          <label for="diasvacpend">Días de vacaciones causados (calculado)</label>
+          <input type="number" id="diasvacpend" min="0" step="0.01" value="0" readonly style="background:var(--paper); color:var(--ink-soft); cursor:not-allowed;">
+          <span class="hint" id="vacFormulaHint">Se calcula solo con el rango de fechas (días trabajados × 15 ÷ 360); ya no se puede escribir a mano.</span>
         </div>
         <div class="field">
           <label for="cesantiasant">Cesantías pendientes de años anteriores (valor)</label>
@@ -553,7 +606,6 @@
     <div class="actions no-print">
       <button type="button" class="primary" id="btnCalcular">Calcular liquidación</button>
       <button type="button" class="ghost" id="btnLimpiar">Limpiar</button>
-      <button type="button" class="ghost" id="btnImprimir">Imprimir / PDF</button>
     </div>
     <p class="hint no-print" style="margin-top:10px;">Completa los datos y presiona "Calcular liquidación" para ver el desglose; los resultados no se actualizan solos mientras escribes.</p>
   </section>
@@ -625,6 +677,23 @@
     <p class="price">Asesoría directa por WhatsApp — $50.000 COP</p>
     <a href="#" target="_blank" class="wa-btn secondary" id="waAsesoriaBtn">Contratar asesoría por WhatsApp</a>
   </div>
+
+  <div class="reviews-box no-print">
+    <h3>Comentarios y recomendaciones</h3>
+    <p class="hint" style="margin:0 0 12px;">Califica tu experiencia con la calculadora. Tu comentario nos llega directo por WhatsApp; los testimonios de abajo son los que ya publicamos.</p>
+    <div class="star-picker" id="starPicker">
+      <button type="button" class="star" data-val="1">★</button>
+      <button type="button" class="star" data-val="2">★</button>
+      <button type="button" class="star" data-val="3">★</button>
+      <button type="button" class="star" data-val="4">★</button>
+      <button type="button" class="star" data-val="5">★</button>
+    </div>
+    <textarea id="reviewText" rows="3" placeholder="Cuéntanos cómo te fue con la calculadora..."></textarea>
+    <button type="button" class="primary" id="btnPublishReview">Enviar comentario</button>
+    <p class="hint" id="reviewMsg" style="margin-top:8px;"></p>
+
+    <div id="publishedReviews" class="published-reviews"></div>
+  </div>
 </div>
 
 <footer class="notes">
@@ -644,6 +713,10 @@
   const PRO_PRICE = 15000;
   // Precio de la asesoría directa.
   const ADVISORY_PRICE = 50000;
+  // Salario mínimo y auxilio de transporte vigentes (Decretos 1469 y 1470 de 2025, para el año 2026).
+  // Actualiza estos dos valores cada vez que cambien por decreto.
+  const SMLMV_VIGENTE = 1750905;
+  const AUX_TRANSPORTE_VIGENTE = 249095;
   // Lote de códigos de acceso consecutivos: entrégale uno distinto a cada cliente, en orden,
   // después de confirmar su pago (empieza en TRI-0001). No se marcan como "usados" solos —
   // sin un backend no hay forma de impedir que alguien reutilice uno filtrado — pero al menos
@@ -665,6 +738,31 @@
 
   let lastResult = null; // datos de la última liquidación calculada, usados por el PDF/Excel
   let proUnlocked = false;
+  let logoDataUrl = null; // logo del empleador (base64), usado como membrete en el PDF
+  let logoDims = null; // {w,h} naturales del logo, para no deformarlo en el PDF
+
+  // ---- logo del empleador: cargar, previsualizar y quitar ----
+  $('logoInput').addEventListener('change', (e)=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      logoDataUrl = reader.result;
+      const img = new Image();
+      img.onload = ()=>{ logoDims = { w: img.naturalWidth, h: img.naturalHeight }; };
+      img.src = logoDataUrl;
+      $('logoPreview').src = logoDataUrl;
+      $('logoPreviewWrap').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+  $('btnQuitarLogo').addEventListener('click', ()=>{
+    logoDataUrl = null;
+    logoDims = null;
+    $('logoInput').value = '';
+    $('logoPreviewWrap').style.display = 'none';
+  });
+
 
   function parseDate(str){
     if(!str) return null;
@@ -730,12 +828,30 @@
     }
   });
 
-  // ---- auto-fill días de vacaciones pendientes from the date range ----
+  // ---- auxilio de transporte: se calcula solo según el salario (regla de 2 SMLMV, año 2026) ----
+  $('salario').addEventListener('input', ()=>{
+    const s = parseFloat($('salario').value) || 0;
+    if(s > 0 && s <= 2 * SMLMV_VIGENTE){
+      $('transporte').value = AUX_TRANSPORTE_VIGENTE;
+      $('transporteHint').textContent = `Aplica: hasta 2 SMLMV ($${(2*SMLMV_VIGENTE).toLocaleString('es-CO')}). Auxilio 2026: $${AUX_TRANSPORTE_VIGENTE.toLocaleString('es-CO')}.`;
+    } else {
+      $('transporte').value = 0;
+      $('transporteHint').textContent = s > 0
+        ? `No aplica: el salario supera 2 SMLMV ($${(2*SMLMV_VIGENTE).toLocaleString('es-CO')}).`
+        : 'Se calcula solo: aplica $249.095 (2026) si el salario es de hasta 2 SMLMV ($3.501.810); si es mayor, no aplica.';
+    }
+  });
+
+  // ---- auto-fill días de vacaciones causados a partir del rango de fechas ----
+  // Fórmula legal: días causados = días trabajados × 15 ÷ 360
   function recalcVacRange(){
     const vi = parseDate($('vacIni').value);
     const vf = parseDate($('vacFin').value);
     if(vi && vf && vf >= vi){
-      $('diasvacpend').value = days360(vi, vf, true);
+      const diasTrabajados = days360(vi, vf, true);
+      const diasCausados = diasTrabajados * 15 / 360;
+      $('diasvacpend').value = diasCausados.toFixed(2);
+      $('vacFormulaHint').textContent = `Días causados: ${diasTrabajados} × 15 ÷ 360 = ${diasCausados.toFixed(2)} días`;
     }
   }
   $('vacIni').addEventListener('change', recalcVacRange);
@@ -772,13 +888,13 @@
     const fingreso = parseDate($('fingreso').value);
     const fretiro = parseDate($('fretiro').value);
     const salario = parseFloat($('salario').value) || 0;
-    const transporte = parseFloat($('transporte').value) || 0;
+    const transporte = salario > 0 && salario <= 2 * SMLMV_VIGENTE ? AUX_TRANSPORTE_VIGENTE : 0;
+    $('transporte').value = transporte;
     const diasLicencia = parseFloat($('diaslicencia').value) || 0;
     const tipoContrato = $('tipocontrato').value;
     const generaIndemnizacion = $('generaIndemnizacion').checked;
     const supera10 = $('supera10smlmv').checked;
     const diasRestantesPactado = parseFloat($('diasrestantes').value) || 0;
-    const diasVacPend = parseFloat($('diasvacpend').value) || 0;
     const cesantiasAnt = parseFloat($('cesantiasant').value) || 0;
     const primaAnt = parseFloat($('primaant').value) || 0;
     const horasExtras = parseFloat($('horasextras').value) || 0;
@@ -788,6 +904,9 @@
     const reteFuente = parseFloat($('retefuente').value) || 0;
     let diasSalarioPend = parseFloat($('diassalariopend').value);
     if(isNaN(diasSalarioPend)) diasSalarioPend = 0;
+    const horasExtrasMes = parseFloat($('horasExtrasMes').value) || 0;
+    const recargosMes = parseFloat($('recargosMes').value) || 0;
+    const dominicalesMes = parseFloat($('dominicalesMes').value) || 0;
 
     let diasTotales = 0, diasNetos = 0;
     if(fingreso && fretiro && fretiro >= fingreso){
@@ -828,7 +947,17 @@
     const cesantias = (baseCesantias * diasCesantiasPend) / 360 + cesantiasAnt;
     const interesesCesantias = ((baseCesantias * diasCesantiasPend) / 360) * diasCesantiasPend * 0.12 / 360;
     const prima = (basePrima * diasPrimaPend) / 360 + primaAnt;
-    const vacaciones = (baseVacaciones/30) * diasVacPend;
+
+    // ---- vacaciones: días trabajados sin disfrutar → días causados (×15÷360) → valor (Salario × días ÷ 720) ----
+    const vacIniDate = parseDate($('vacIni').value);
+    const vacFinDate = parseDate($('vacFin').value);
+    let diasVacTrabajados = 0, diasVacCausados = 0;
+    if(vacIniDate && vacFinDate && vacFinDate >= vacIniDate){
+      diasVacTrabajados = days360(vacIniDate, vacFinDate, true);
+      diasVacCausados = diasVacTrabajados * 15 / 360;
+    }
+    $('diasvacpend').value = diasVacCausados.toFixed(2);
+    const vacaciones = (baseVacaciones * diasVacTrabajados) / 720;
 
     let indemnizacion = 0, diasIndemnizacion = 0;
     if(generaIndemnizacion){
@@ -842,11 +971,11 @@
     }
 
     // aportes sobre el salario ordinario del período final + devengados que sí constituyen salario
-    const baseAportes = salarioPendiente + sumDevPrestacional;
+    const baseAportes = salarioPendiente + sumDevPrestacional + horasExtrasMes + recargosMes + dominicalesMes;
     const salud = baseAportes * pctSalud;
     const pension = baseAportes * pctPension;
 
-    const totalDevengado = salarioPendiente + transportePendiente + cesantias + interesesCesantias + prima + vacaciones + indemnizacion + sumDevExtra;
+    const totalDevengado = salarioPendiente + transportePendiente + horasExtrasMes + recargosMes + dominicalesMes + cesantias + interesesCesantias + prima + vacaciones + indemnizacion + sumDevExtra;
     const totalDeducido = salud + pension + reteFuente + sumDedExtra;
     const neto = totalDevengado - totalDeducido;
 
@@ -873,11 +1002,16 @@
     const rows = [
       ['Salario (días pendientes del período)', diasSalarioPend, salarioPendiente, 0],
       ['Auxilio de transporte', diasSalarioPend, transportePendiente, 0],
+    ];
+    if(horasExtrasMes > 0) rows.push(['Horas extras (mes en curso)', 0, horasExtrasMes, 0]);
+    if(recargosMes > 0) rows.push(['Recargos ordinarios o nocturnos (mes en curso)', 0, recargosMes, 0]);
+    if(dominicalesMes > 0) rows.push(['Domingos y festivos (mes en curso)', 0, dominicalesMes, 0]);
+    rows.push(
       ['Cesantías', diasCesantiasPend, cesantias, 0],
       ['Intereses sobre cesantías', diasCesantiasPend, interesesCesantias, 0],
       ['Prima de servicios', diasPrimaPend, prima, 0],
-      ['Vacaciones', diasVacPend, vacaciones, 0],
-    ];
+      ['Vacaciones', diasVacCausados, vacaciones, 0]
+    );
     if(indemnizacion > 0){
       rows.push(['Indemnización', diasIndemnizacion, indemnizacion, 0]);
     }
@@ -928,6 +1062,9 @@
     // ---- guardar resultado para exportar a PDF / Excel ----
     lastResult = {
       empresa, nombre, cedula,
+      nit: $('nit').value.trim(),
+      logo: logoDataUrl,
+      logoDims,
       cargo: $('cargo').value.trim(),
       fingresoStr: $('fingreso').value, fretiroStr: $('fretiro').value,
       rows, totalDevengado, totalDeducido, neto, refCode,
@@ -939,6 +1076,8 @@
     $('btnPDF').textContent = 'Descargar PDF';
     $('btnExcel').textContent = 'Descargar plantilla Excel';
     $('refCodeDisplay').textContent = `Código de referencia de este pago: ${refCode}`;
+    const valorMesEnCurso = salarioPendiente + transportePendiente + horasExtrasMes + recargosMes + dominicalesMes;
+    $('valorMesHint').textContent = `Valor total a pagar del mes en curso: ${fmt(valorMesEnCurso)}`;
 
     // ---- enlaces de WhatsApp (pago y asesoría) ----
     const msgPago = `Hola Trinomio SAS, ya realicé el pago de ${fmt(PRO_PRICE)} para desbloquear el PDF y Excel de la liquidación de ${nombre} (cédula ${cedula}), neto a pagar ${fmt(neto)}. Referencia: ${refCode}. Adjunto el comprobante.`;
@@ -948,7 +1087,6 @@
   }
 
   $('btnCalcular').addEventListener('click', recalc);
-  $('btnImprimir').addEventListener('click', ()=>{ recalc(); window.print(); });
   $('btnLimpiar').addEventListener('click', ()=>{
     document.querySelectorAll('input[type=text], input[type=number], input[type=date]').forEach(i=>{
       if(i.type==='number' && (i.id==='pctsalud')) { i.value = 4; }
@@ -972,10 +1110,75 @@
     $('btnExcel').textContent = 'Descargar plantilla Excel';
     $('proMsg').textContent = '';
     $('refCodeDisplay').textContent = '';
+    $('valorMesHint').textContent = 'Valor total a pagar del mes en curso: $ 0';
+    $('transporte').value = 0;
+    $('transporteHint').textContent = 'Se calcula solo: aplica $249.095 (2026) si el salario es de hasta 2 SMLMV ($3.501.810); si es mayor, no aplica.';
+    $('logoInput').value = '';
+    $('logoPreviewWrap').style.display = 'none';
+    logoDataUrl = null;
+    logoDims = null;
+    $('vacFormulaHint').textContent = 'Se calcula solo con el rango de fechas (días trabajados × 15 ÷ 360); ya no se puede escribir a mano.';
   });
 
   // ---- WhatsApp asesoría: enlace por defecto disponible desde el inicio ----
   $('waAsesoriaBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola Trinomio SAS, quiero contratar la asesoría directa ('+fmt(ADVISORY_PRICE)+') para mi liquidación de contrato.')}`;
+
+  // ============ TESTIMONIOS PUBLICADOS — EDITA ESTA LISTA A MANO ============
+  // Estos son los que se muestran como "publicados" en la página. Los comentarios que
+  // la gente envía por el formulario de abajo te llegan por WhatsApp; si quieres mostrar
+  // alguno aquí, agrégalo tú mismo a este arreglo.
+  const PUBLISHED_REVIEWS = [
+    // { name: 'María Pérez', stars: 5, text: 'Me ayudó a entender mi liquidación al detalle.' },
+  ];
+  // ================================================================
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderPublishedReviews(){
+    const wrap = $('publishedReviews');
+    if(!PUBLISHED_REVIEWS.length){
+      wrap.innerHTML = '<p class="hint">Aún no hay testimonios publicados.</p>';
+      return;
+    }
+    wrap.innerHTML = PUBLISHED_REVIEWS.map(r => `
+      <div class="review-card">
+        <div class="review-stars">${'★'.repeat(r.stars)}${'☆'.repeat(5 - r.stars)}</div>
+        <p class="review-text">${escapeHtml(r.text)}</p>
+        <p class="review-name">— ${escapeHtml(r.name || 'Cliente')}</p>
+      </div>
+    `).join('');
+  }
+  renderPublishedReviews();
+
+  // ---- selector de estrellas y envío del comentario por WhatsApp ----
+  let selectedStars = 0;
+  document.querySelectorAll('#starPicker .star').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      selectedStars = parseInt(btn.dataset.val, 10);
+      document.querySelectorAll('#starPicker .star').forEach(b=>{
+        b.classList.toggle('active', parseInt(b.dataset.val, 10) <= selectedStars);
+      });
+    });
+  });
+  $('btnPublishReview').addEventListener('click', ()=>{
+    if(!selectedStars){
+      $('reviewMsg').textContent = 'Selecciona de 1 a 5 estrellas antes de enviar.';
+      $('reviewMsg').style.color = 'var(--brick)';
+      return;
+    }
+    const texto = $('reviewText').value.trim();
+    const nombreCliente = $('nombre').value.trim() || 'Cliente';
+    const estrellasTxt = '★'.repeat(selectedStars) + '☆'.repeat(5 - selectedStars);
+    const msg = `Hola Trinomio SAS, quiero dejar una reseña de la calculadora de liquidación.\nCalificación: ${estrellasTxt} (${selectedStars}/5)\nComentario: ${texto || '(sin comentario)'}\nNombre: ${nombreCliente}`;
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+    $('reviewMsg').textContent = 'Gracias, tu comentario se envió por WhatsApp. Si lo publicamos, lo verás en esta sección.';
+    $('reviewMsg').style.color = 'var(--green)';
+    $('reviewText').value = '';
+    selectedStars = 0;
+    document.querySelectorAll('#starPicker .star').forEach(b=>b.classList.remove('active'));
+  });
 
   // ---- desbloqueo PRO ----
   $('btnUnlock').addEventListener('click', ()=>{
@@ -1017,10 +1220,31 @@
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     let y = 18;
+
+    if(lastResult.logo){
+      const maxW = 32, maxH = 18;
+      let w = maxW, h = maxH;
+      if(lastResult.logoDims && lastResult.logoDims.w && lastResult.logoDims.h){
+        const ratio = lastResult.logoDims.w / lastResult.logoDims.h;
+        if(ratio > maxW / maxH){ w = maxW; h = maxW / ratio; } else { h = maxH; w = maxH * ratio; }
+      }
+      const fmtType = lastResult.logo.indexOf('image/png') !== -1 ? 'PNG' : 'JPEG';
+      try{ doc.addImage(lastResult.logo, fmtType, 14, 10, w, h); }catch(e){ /* logo inválido, se omite */ }
+      doc.setFont('helvetica','bold'); doc.setFontSize(12);
+      doc.text(lastResult.empresa || 'Empresa', 14 + w + 6, 16);
+      if(lastResult.nit){
+        doc.setFont('helvetica','normal'); doc.setFontSize(9);
+        doc.text(`NIT: ${lastResult.nit}`, 14 + w + 6, 21);
+      }
+      y = 10 + Math.max(h, 14) + 6;
+      doc.setLineWidth(0.3); doc.line(14, y, 196, y); y += 7;
+    }
+
     doc.setFont('helvetica','bold'); doc.setFontSize(15);
     doc.text('Liquidación de contrato', 14, y); y += 8;
     doc.setFontSize(10); doc.setFont('helvetica','normal');
     doc.text(`Empresa: ${lastResult.empresa || '-'}`, 14, y); y += 5;
+    if(lastResult.nit){ doc.text(`NIT: ${lastResult.nit}`, 14, y); y += 5; }
     doc.text(`Empleado: ${lastResult.nombre || '-'}    Cédula: ${lastResult.cedula || '-'}`, 14, y); y += 5;
     doc.text(`Cargo: ${lastResult.cargo || '-'}`, 14, y); y += 5;
     doc.text(`Fecha ingreso: ${lastResult.fingresoStr || '-'}    Fecha retiro: ${lastResult.fretiroStr || '-'}`, 14, y); y += 5;
@@ -1077,6 +1301,7 @@
     const wsData = [
       ['Liquidación de contrato'],
       ['Empresa', lastResult.empresa || ''],
+      ['NIT', lastResult.nit || ''],
       ['Empleado', lastResult.nombre || ''],
       ['Cédula', lastResult.cedula || ''],
       ['Cargo', lastResult.cargo || ''],
