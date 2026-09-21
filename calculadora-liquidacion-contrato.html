@@ -312,14 +312,35 @@
   .pro-grid{
     display:grid; grid-template-columns: 150px 1fr; gap:22px; align-items:start;
   }
-  @media (max-width:600px){ .pro-grid{ grid-template-columns:1fr; } }
-  .qr-box{
-    width:150px; height:150px; border:1px solid var(--rule-strong);
-    display:flex; align-items:center; justify-content:center; text-align:center;
-    font-size:.72rem; color:var(--ink-soft); padding:8px; border-radius:3px;
-    background:#fff; overflow:hidden;
+  @media (max-width:600px){ .pro-grid{ grid-template-columns:1fr; } .qr-trigger-btn{ width:100%; } }
+  .qr-trigger-wrap{ display:flex; align-items:flex-start; }
+  .qr-trigger-btn{
+    background:var(--brand-teal); color:#fff; border:none; border-radius:3px;
+    padding:14px 18px; font-family:'Inter',sans-serif; font-weight:600; font-size:.92rem;
+    cursor:pointer; width:150px; line-height:1.3;
   }
-  .qr-box img{ width:100%; height:100%; object-fit:contain; }
+  .qr-trigger-btn:hover{ filter:brightness(1.08); }
+  .qr-modal-backdrop{
+    position:fixed; inset:0; background:rgba(15,42,46,.62);
+    display:none; align-items:center; justify-content:center;
+    padding:20px; z-index:1000;
+  }
+  .qr-modal-backdrop.open{ display:flex; }
+  .qr-modal{
+    background:#fff; border-radius:8px; padding:28px 26px 24px;
+    max-width:340px; width:100%; text-align:center; position:relative;
+  }
+  .qr-modal h3{ color:var(--ink); }
+  .qr-modal img{
+    width:100%; max-width:270px; height:auto; margin:6px auto 14px; display:block;
+    border:1px solid var(--rule-strong); border-radius:4px; background:#fff;
+  }
+  .qr-modal .hint{ color:var(--ink-soft); }
+  .qr-modal-close{
+    position:absolute; top:8px; right:12px; background:none; border:none;
+    font-size:1.6rem; line-height:1; color:var(--ink-soft); cursor:pointer;
+  }
+  .qr-modal-close:hover{ color:var(--ink); }
   .unlock-row{ display:flex; gap:10px; margin:14px 0; flex-wrap:wrap; }
   .unlock-row input{ flex:1; min-width:180px; }
   .unlock-row button{
@@ -569,9 +590,12 @@
     <h3>Descarga en PDF y plantilla Excel</h3>
     <div class="price" id="proPriceDisplay">$ 15.000 COP · pago único por liquidación</div>
     <div class="pro-grid">
-      <div class="qr-box" id="qrBox"><img src="assets/QR%20PAGOS.png" alt="QR de pago Nequi/Bancolombia - Trinomio SAS" onerror="this.parentElement.textContent='No se encontró assets/QR PAGOS.png junto a este archivo';"></div>
+      <div class="qr-trigger-wrap">
+        <button type="button" id="btnShowQR" class="qr-trigger-btn">Aquí da clic para pago por QR</button>
+      </div>
       <div>
-        <p class="hint" style="margin:0 0 10px;">1. Escanea el QR y paga el valor indicado. 2. Envía el comprobante por WhatsApp con el botón de abajo — llena con el nombre y el neto de esta liquidación para que se ha  identificado rápido. 3. Te respondemos con un código de acceso de un solo uso para desbloquear la descarga.</p>
+        <p class="hint" style="margin:0 0 6px;" id="refCodeDisplay"></p>
+        <p class="hint" style="margin:0 0 10px;">1. Da clic en el botón para ver el QR en grande y escanéalo desde tu app de Nequi o Bancolombia. 2. Envía el comprobante por WhatsApp con el botón de abajo — llega automáticamente con el nombre, el neto y el código de referencia de arriba para que lo identifiques rápido. 3. Te respondemos con uno de nuestros códigos de acceso para desbloquear la descarga.</p>
         <a href="#" target="_blank" class="wa-btn" id="waPagoBtn">Enviar comprobante por WhatsApp</a>
         <div class="unlock-row">
           <input type="text" id="proCode" placeholder="Código de acceso">
@@ -586,9 +610,19 @@
     </div>
   </div>
 
+  <div class="qr-modal-backdrop no-print" id="qrModalBackdrop">
+    <div class="qr-modal" role="dialog" aria-modal="true" aria-label="Código QR de pago">
+      <button type="button" class="qr-modal-close" id="qrModalClose" aria-label="Cerrar">×</button>
+      <h3>Escanea para pagar</h3>
+      <p class="price" id="qrModalPrice" style="margin:2px 0 12px;">$ 15.000 COP</p>
+      <img src="assets/QR%20PAGOS.png" alt="QR de pago Nequi/Bancolombia - Trinomio SAS" id="qrModalImg" onerror="this.replaceWith(Object.assign(document.createElement('p'),{className:'hint',textContent:'No se encontró assets/QR PAGOS.png junto a este archivo.'}))">
+      <p class="hint">Abre tu app de Nequi o Bancolombia, escanea este código desde tu celular y paga el valor indicado.</p>
+    </div>
+  </div>
+
   <div class="advisory-box no-print">
     <p>¿Necesitas revisar este caso con un asesor?</p>
-    <p class="price">Asesoría directa por WhatsApp — $50.000 COP </p>
+    <p class="price">Asesoría directa por WhatsApp — $50.000 COP</p>
     <a href="#" target="_blank" class="wa-btn secondary" id="waAsesoriaBtn">Contratar asesoría por WhatsApp</a>
   </div>
 </div>
@@ -605,18 +639,29 @@
 
   // ============ CONFIGURACIÓN — EDITA ESTOS VALORES ============
   // Número de WhatsApp de Trinomio SAS, con indicativo de país, SIN "+" ni espacios (ej. 573001234567).
-  const WHATSAPP_NUMBER = '573219246512'; // ← REEMPLAZA por el número real
+  const WHATSAPP_NUMBER = '573219246512';
   // Precio del desbloqueo de PDF + Excel por liquidación (pago único).
   const PRO_PRICE = 15000;
-  // Precio de la asesoría directa quincenal.
+  // Precio de la asesoría directa.
   const ADVISORY_PRICE = 50000;
-  // Código(s) de acceso válidos para desbloquear la descarga. Cámbialo cuando quieras (rotarlo periódicamente
-  // da algo más de control, aunque no reemplaza una validación de pago real).
-  const PRO_ACCESS_CODES = ['TRINOMIOPRO'];
+  // Lote de códigos de acceso consecutivos: entrégale uno distinto a cada cliente, en orden,
+  // después de confirmar su pago (empieza en TRI-0001). No se marcan como "usados" solos —
+  // sin un backend no hay forma de impedir que alguien reutilice uno filtrado — pero al menos
+  // no es la misma palabra para todo el mundo. Sube PRO_CODE_COUNT si necesitas más.
+  const PRO_CODE_COUNT = 50;
+  const PRO_ACCESS_CODES = Array.from({length: PRO_CODE_COUNT}, (_, i) => 'TRI-' + String(i + 1).padStart(4, '0'));
   // ================================================================
 
   $('proPriceDisplay').textContent = `${fmt(PRO_PRICE)} · pago único por liquidación`;
-  document.querySelector('.advisory-box .price').textContent = `Asesoría directa por WhatsApp — ${fmt(ADVISORY_PRICE)} quincenal`;
+  $('qrModalPrice').textContent = fmt(PRO_PRICE);
+
+  // ---- ventana emergente del QR ----
+  const qrBackdrop = $('qrModalBackdrop');
+  $('btnShowQR').addEventListener('click', ()=>{ qrBackdrop.classList.add('open'); });
+  $('qrModalClose').addEventListener('click', ()=>{ qrBackdrop.classList.remove('open'); });
+  qrBackdrop.addEventListener('click', (e)=>{ if(e.target === qrBackdrop) qrBackdrop.classList.remove('open'); });
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') qrBackdrop.classList.remove('open'); });
+  document.querySelector('.advisory-box .price').textContent = `Asesoría directa por WhatsApp — ${fmt(ADVISORY_PRICE)}`;
 
   let lastResult = null; // datos de la última liquidación calculada, usados por el PDF/Excel
   let proUnlocked = false;
@@ -874,12 +919,18 @@
     }
     $('actaFechaTexto').textContent = actaFecha;
 
+    // ---- código de referencia único de este cálculo ----
+    const hoy = new Date();
+    const fechaRef = `${hoy.getFullYear()}${String(hoy.getMonth()+1).padStart(2,'0')}${String(hoy.getDate()).padStart(2,'0')}`;
+    const sufijoRef = Math.random().toString(36).slice(2,6).toUpperCase();
+    const refCode = `REF-${fechaRef}-${sufijoRef}`;
+
     // ---- guardar resultado para exportar a PDF / Excel ----
     lastResult = {
       empresa, nombre, cedula,
       cargo: $('cargo').value.trim(),
       fingresoStr: $('fingreso').value, fretiroStr: $('fretiro').value,
-      rows, totalDevengado, totalDeducido, neto,
+      rows, totalDevengado, totalDeducido, neto, refCode,
       actaTexto: $('actaTexto').textContent, actaFecha,
       pdfDownloaded: false, excelDownloaded: false,
     };
@@ -887,11 +938,12 @@
     $('btnExcel').disabled = !proUnlocked;
     $('btnPDF').textContent = 'Descargar PDF';
     $('btnExcel').textContent = 'Descargar plantilla Excel';
+    $('refCodeDisplay').textContent = `Código de referencia de este pago: ${refCode}`;
 
     // ---- enlaces de WhatsApp (pago y asesoría) ----
-    const msgPago = `Hola Trinomio SAS, ya realicé el pago de ${fmt(PRO_PRICE)} para desbloquear el PDF y Excel de la liquidación de ${nombre} (cédula ${cedula}), neto a pagar ${fmt(neto)}. Adjunto el comprobante.`;
+    const msgPago = `Hola Trinomio SAS, ya realicé el pago de ${fmt(PRO_PRICE)} para desbloquear el PDF y Excel de la liquidación de ${nombre} (cédula ${cedula}), neto a pagar ${fmt(neto)}. Referencia: ${refCode}. Adjunto el comprobante.`;
     $('waPagoBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msgPago)}`;
-    const msgAsesoria = `Hola Trinomio SAS, quiero contratar la asesoría directa quincenal (${fmt(ADVISORY_PRICE)}) para la liquidación de ${nombre}.`;
+    const msgAsesoria = `Hola Trinomio SAS, quiero contratar la asesoría directa (${fmt(ADVISORY_PRICE)}) para la liquidación de ${nombre}.`;
     $('waAsesoriaBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msgAsesoria)}`;
   }
 
@@ -919,10 +971,11 @@
     $('btnPDF').textContent = 'Descargar PDF';
     $('btnExcel').textContent = 'Descargar plantilla Excel';
     $('proMsg').textContent = '';
+    $('refCodeDisplay').textContent = '';
   });
 
   // ---- WhatsApp asesoría: enlace por defecto disponible desde el inicio ----
-  $('waAsesoriaBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola Trinomio SAS, quiero contratar la asesoría directa quincenal ('+fmt(ADVISORY_PRICE)+') para mi liquidación de contrato.')}`;
+  $('waAsesoriaBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola Trinomio SAS, quiero contratar la asesoría directa ('+fmt(ADVISORY_PRICE)+') para mi liquidación de contrato.')}`;
 
   // ---- desbloqueo PRO ----
   $('btnUnlock').addEventListener('click', ()=>{
@@ -970,7 +1023,8 @@
     doc.text(`Empresa: ${lastResult.empresa || '-'}`, 14, y); y += 5;
     doc.text(`Empleado: ${lastResult.nombre || '-'}    Cédula: ${lastResult.cedula || '-'}`, 14, y); y += 5;
     doc.text(`Cargo: ${lastResult.cargo || '-'}`, 14, y); y += 5;
-    doc.text(`Fecha ingreso: ${lastResult.fingresoStr || '-'}    Fecha retiro: ${lastResult.fretiroStr || '-'}`, 14, y); y += 8;
+    doc.text(`Fecha ingreso: ${lastResult.fingresoStr || '-'}    Fecha retiro: ${lastResult.fretiroStr || '-'}`, 14, y); y += 5;
+    doc.text(`Código de referencia: ${lastResult.refCode || '-'}`, 14, y); y += 8;
 
     doc.setFont('helvetica','bold');
     doc.text('Concepto', 14, y);
@@ -1028,6 +1082,7 @@
       ['Cargo', lastResult.cargo || ''],
       ['Fecha ingreso', lastResult.fingresoStr || ''],
       ['Fecha retiro', lastResult.fretiroStr || ''],
+      ['Código de referencia', lastResult.refCode || ''],
       [],
       ['Concepto', 'Días', 'Devengado', 'Deducido'],
     ];
