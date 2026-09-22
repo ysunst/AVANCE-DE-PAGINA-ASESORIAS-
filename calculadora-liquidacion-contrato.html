@@ -808,7 +808,8 @@
     box.innerHTML = `
       <div style="font-weight:600;color:var(--gold-deep);margin-bottom:6px;">[admin] Generación de códigos</div>
       <button type="button" id="btnGenUnico" class="addline" style="width:auto;padding:6px 12px;margin-right:8px;">Generar código de un solo uso</button>
-      <button type="button" id="btnGenSub" class="addline" style="width:auto;padding:6px 12px;">Ver código de suscripción de este mes</button>
+      <button type="button" id="btnGenSub" class="addline" style="width:auto;padding:6px 12px;margin-right:8px;">Ver código de suscripción de este mes</button>
+      <button type="button" id="btnProbarDrive" class="addline" style="width:auto;padding:6px 12px;">Probar respaldo en Drive</button>
       <div id="adminResultado" style="margin-top:8px;font-weight:600;"></div>
     `;
     document.querySelector('.pro-box').appendChild(box);
@@ -826,6 +827,17 @@
         ? `Código de suscripción de este mes: ${r.codigo}`
         : `Error: ${r.reason || 'no se pudo obtener'}`;
     });
+    document.getElementById('btnProbarDrive').addEventListener('click', async ()=>{
+      document.getElementById('adminResultado').textContent = 'Probando respaldo en Drive...';
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text('Prueba de respaldo en Drive - ' + new Date().toString(), 14, 20);
+      const blob = doc.output('blob');
+      const r = await guardarPDFEnDrive('prueba_respaldo.pdf', blob, { nombre: 'Prueba admin', cedula: '0000', tipo: 'prueba', codigo: 'TEST' });
+      document.getElementById('adminResultado').textContent = r.ok
+        ? `✓ El respaldo SÍ funciona. Archivo guardado: ${r.url}`
+        : `✗ El respaldo falló: ${r.error}`;
+    });
   }
 
   // ---- ventana emergente del QR ----
@@ -838,6 +850,7 @@
 
   let lastResult = null; // datos de la última liquidación calculada, usados por el PDF/Excel
   let proUnlocked = false;
+  let tipoAccesoActual = null; // 'unico' | 'suscripcion' — el último tipo de código validado
   let logoDataUrl = null; // logo del empleador (base64), usado como membrete en el PDF
   let logoDims = null; // {w,h} naturales del logo, para no deformarlo en el PDF
   actualizarPrecioPro();
@@ -1339,6 +1352,7 @@
     }
     if(r.valid){
       proUnlocked = true;
+      tipoAccesoActual = r.tipo;
       $('proDownloads').style.display = 'flex';
       $('btnPDF').disabled = !lastResult;
       $('btnWorksheetPDF').disabled = !lastResult;
@@ -1370,6 +1384,37 @@
     a.href = url; a.download = filename;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  }
+
+  // ---- respaldo: guarda el PDF también en tu Google Drive (carpeta "Liquidaciones - Trinomio SAS") ----
+  function blobToBase64(blob){
+    return new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onloadend = ()=> resolve(String(reader.result).split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+  async function guardarPDFEnDrive(filename, blob, metaOverride){
+    if(!BACKEND_URL) return { ok:false, error:'BACKEND_URL vacío' };
+    try{
+      const base64 = await blobToBase64(blob);
+      const meta = metaOverride || {
+        nombre: lastResult ? lastResult.nombre : '',
+        cedula: lastResult ? lastResult.cedula : '',
+        tipo: tipoAccesoActual || '',
+        codigo: $('proCode').value.trim().toUpperCase(),
+      };
+      const res = await fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'guardarPDF', filename, base64, meta }),
+      });
+      const data = await res.json();
+      return data.ok ? { ok:true, url:data.url } : { ok:false, error: data.error || 'respuesta sin "ok"' };
+    }catch(e){
+      return { ok:false, error: String(e && e.message || e) };
+    }
   }
 
   // ---- convertir un valor en pesos a letras (para la línea "SON:") ----
@@ -1712,6 +1757,11 @@
       await saveFile(filename, blob);
       $('btnPDF').textContent = 'PDF descargado ✓';
       $('btnPDF').disabled = true;
+      const arch = await guardarPDFEnDrive(filename, blob);
+      $('proMsg').textContent = arch.ok
+        ? 'PDF descargado y respaldado en Drive ✓'
+        : `PDF descargado, pero el respaldo en Drive falló: ${arch.error}`;
+      $('proMsg').style.color = arch.ok ? 'var(--green)' : 'var(--brick)';
     }catch(e){ $('proMsg').textContent = 'No se pudo generar el PDF. Intenta de nuevo.'; }
   });
 
@@ -1723,6 +1773,11 @@
       await saveFile(filename, blob);
       $('btnWorksheetPDF').textContent = 'PDF descargado ✓';
       $('btnWorksheetPDF').disabled = true;
+      const arch = await guardarPDFEnDrive(filename, blob);
+      $('proMsg').textContent = arch.ok
+        ? 'PDF descargado y respaldado en Drive ✓'
+        : `PDF descargado, pero el respaldo en Drive falló: ${arch.error}`;
+      $('proMsg').style.color = arch.ok ? 'var(--green)' : 'var(--brick)';
     }catch(e){ $('proMsg').textContent = 'No se pudo generar la hoja de trabajo. Intenta de nuevo.'; }
   });
 
