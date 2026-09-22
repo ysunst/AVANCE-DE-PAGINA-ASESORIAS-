@@ -711,6 +711,12 @@
   </div>
 
   <div class="advisory-box no-print">
+    <p>¿Eres contador o empresa y liquidas varios contratos al mes?</p>
+    <p class="price" id="subPriceDisplay">Plan mensual — descargas ilimitadas por $99.000 COP/mes</p>
+    <a href="#" target="_blank" class="wa-btn secondary" id="waSuscripcionBtn">Solicitar plan mensual por WhatsApp</a>
+  </div>
+
+  <div class="advisory-box no-print">
     <p>¿Necesitas revisar este caso con un asesor?</p>
     <p class="price">Asesoría directa por WhatsApp — $50.000 COP</p>
     <a href="#" target="_blank" class="wa-btn secondary" id="waAsesoriaBtn">Contratar asesoría por WhatsApp</a>
@@ -753,12 +759,14 @@
   const PRO_PRICE_CON_LOGO = 45000;
   // Precio de la asesoría directa.
   const ADVISORY_PRICE = 50000;
+  // Plan mensual para contadores y empresas con varias liquidaciones al mes: descargas ilimitadas.
+  const SUBSCRIPTION_PRICE = 99000;
   // Salario mínimo y auxilio de transporte vigentes (Decretos 1469 y 1470 de 2025, para el año 2026).
   // Actualiza estos dos valores cada vez que cambien por decreto.
   const SMLMV_VIGENTE = 1750905;
   const AUX_TRANSPORTE_VIGENTE = 249095;
 
-  // ---- código de acceso que cambia solo cada día ----
+  // ---- código de acceso que cambia solo cada día (pago único por liquidación) ----
   // No hay backend, así que no puede invalidarse "al usarse", pero al menos ya no es la misma
   // palabra para siempre: el código válido cambia automáticamente cada día según esta semilla.
   // Cambia CODE_SEED cuando quieras (por ejemplo cada varios meses) para reforzarlo.
@@ -781,6 +789,22 @@
     const ayer = new Date(hoy); ayer.setDate(hoy.getDate() - 1);
     return [codeForDate(hoy), codeForDate(ayer)]; // ayer incluido como margen de gracia
   }
+
+  // ---- código de suscripción que cambia cada mes (plan ilimitado para contadores/empresas) ----
+  // Un mismo código de suscripción sirve para TODAS las descargas de ese cliente durante el mes.
+  // Semilla distinta a la diaria para que nunca coincidan por accidente.
+  const SUB_SEED = 'TRINOMIO-SUB-2026';
+  function codeForMonth(dateObj){
+    const ym = `${dateObj.getFullYear()}${String(dateObj.getMonth()+1).padStart(2,'0')}`;
+    const n = (simpleHash(SUB_SEED + ym) % 9000) + 1000;
+    return `SUB-${n}`;
+  }
+  function codigoSuscripcionVigente(){
+    return codeForMonth(new Date());
+  }
+  function esCodigoValido(code){
+    return codesValidosHoy().includes(code) || code === codigoSuscripcionVigente();
+  }
   // ================================================================
 
   function proPriceActual(){ return logoDataUrl ? PRO_PRICE_CON_LOGO : PRO_PRICE_SIN_LOGO; }
@@ -789,13 +813,13 @@
     $('qrModalPrice').textContent = fmt(proPriceActual());
   }
 
-  // ---- panel de administrador: agrega ?admin=1 a la URL para ver el código de hoy ----
+  // ---- panel de administrador: agrega ?admin=1 a la URL para ver los códigos vigentes ----
   if(new URLSearchParams(window.location.search).get('admin') === '1'){
     const codes = codesValidosHoy();
     const box = document.createElement('p');
     box.className = 'hint';
     box.style.cssText = 'margin-top:10px;font-weight:600;color:var(--gold-deep);';
-    box.textContent = `[admin] Código válido hoy: ${codes[0]} (ayer también sirve: ${codes[1]})`;
+    box.textContent = `[admin] Código diario (pago único): ${codes[0]} (ayer también sirve: ${codes[1]}) · Código de suscripción de este mes: ${codigoSuscripcionVigente()}`;
     document.querySelector('.pro-box').appendChild(box);
   }
 
@@ -1230,6 +1254,8 @@
 
   // ---- WhatsApp asesoría: enlace por defecto disponible desde el inicio ----
   $('waAsesoriaBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola Trinomio SAS, quiero contratar la asesoría directa ('+fmt(ADVISORY_PRICE)+') para mi liquidación de contrato.')}`;
+  $('subPriceDisplay').textContent = `Plan mensual — descargas ilimitadas por ${fmt(SUBSCRIPTION_PRICE)}/mes`;
+  $('waSuscripcionBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola Trinomio SAS, soy contador/empresa y quiero el plan mensual de descargas ilimitadas ('+fmt(SUBSCRIPTION_PRICE)+'/mes) de la calculadora de liquidación.')}`;
 
   // ============ TESTIMONIOS PUBLICADOS — EDITA ESTA LISTA A MANO ============
   // Estos son los que se muestran como "publicados" en la página. Los comentarios que
@@ -1291,14 +1317,15 @@
   // ---- desbloqueo PRO ----
   $('btnUnlock').addEventListener('click', ()=>{
     const code = $('proCode').value.trim().toUpperCase();
-    if(code && codesValidosHoy().includes(code)){
+    if(code && esCodigoValido(code)){
       proUnlocked = true;
       $('proDownloads').style.display = 'flex';
       $('btnPDF').disabled = !lastResult;
       $('btnWorksheetPDF').disabled = !lastResult;
       $('btnExcel').disabled = !lastResult;
+      const esSuscripcion = code === codigoSuscripcionVigente();
       $('proMsg').textContent = lastResult
-        ? 'Acceso desbloqueado. Ya puedes descargar el PDF y el Excel de esta liquidación.'
+        ? `Acceso desbloqueado${esSuscripcion ? ' (plan mensual)' : ''}. Ya puedes descargar el PDF y el Excel de esta liquidación.`
         : 'Acceso desbloqueado. Calcula la liquidación para habilitar la descarga.';
       $('proMsg').style.color = 'var(--green)';
     } else {
