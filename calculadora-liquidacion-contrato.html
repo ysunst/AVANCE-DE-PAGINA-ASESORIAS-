@@ -640,6 +640,14 @@
       <button type="button" class="addline no-print" id="addDeduccion">+ Agregar otra deducción (crédito, libranza, embargo)</button>
     </div>
 
+    <div class="group no-print" style="padding-bottom:0;">
+      <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; font-size:.86rem; color:var(--ink-soft);">
+        <input type="checkbox" id="aceptaDatos" style="margin-top:3px; width:auto;">
+        <span>He leído y acepto los <a href="#" id="verPoliticaLink" style="color:var(--gold-deep); text-decoration:underline;">Términos y Condiciones del Servicio y la Política de Tratamiento de Datos Personales</a> de Trinomio SAS, conforme a la Ley 1581 de 2012 (Habeas Data) y la Ley 1480 de 2011.</span>
+      </label>
+      <p class="hint" id="aceptaDatosMsg" style="margin-top:6px; display:none;">Debes aceptar la política de tratamiento de datos para poder calcular la liquidación.</p>
+    </div>
+
     <div class="actions no-print">
       <button type="button" class="primary" id="btnCalcular">Calcular liquidación</button>
       <button type="button" class="ghost" id="btnLimpiar">Limpiar</button>
@@ -707,6 +715,42 @@
       <p class="price" id="qrModalPrice" style="margin:2px 0 12px;">$ 15.000 COP</p>
       <img src="assets/QR%20PAGOS.png" alt="QR de pago Nequi/Bancolombia - Trinomio SAS" id="qrModalImg" onerror="this.replaceWith(Object.assign(document.createElement('p'),{className:'hint',textContent:'No se encontró assets/QR PAGOS.png junto a este archivo.'}))">
       <p class="hint">Abre tu app de Nequi o Bancolombia, escanea este código desde tu celular y paga el valor indicado.</p>
+    </div>
+  </div>
+
+  <div class="qr-modal-backdrop no-print" id="politicaModalBackdrop">
+    <div class="qr-modal" role="dialog" aria-modal="true" aria-label="Términos y condiciones y política de tratamiento de datos personales" style="max-width:640px; max-height:82vh; overflow-y:auto; text-align:left;">
+      <button type="button" class="qr-modal-close" id="politicaModalClose" aria-label="Cerrar">×</button>
+      <h3 style="text-align:center;">Términos y Condiciones del Servicio y Política de Tratamiento de Datos Personales</h3>
+      <div class="hint" style="text-align:left; line-height:1.65;">
+        <p><strong>1. Objeto.</strong> Esta calculadora es una herramienta digital de apoyo, desarrollada y operada por Trinomio SAS ("Trinomio"), que permite estimar el valor de la liquidación de un contrato de trabajo en Colombia (cesantías, intereses, prima, vacaciones, indemnización y demás conceptos aplicables), con base en la información suministrada por el usuario y en la normativa laboral vigente al momento del cálculo.</p>
+
+        <p><strong>2. Naturaleza del servicio y limitación de responsabilidad.</strong> 2.1. El resultado entregado es una <em>estimación</em> basada en los datos que el usuario ingresa. Trinomio no verifica la veracidad, exactitud ni completitud de dicha información y no se hace responsable por errores derivados de datos incorrectos, incompletos o desactualizados ingresados por el usuario. 2.2. Este servicio no constituye asesoría jurídica ni sustituye la revisión de un abogado o contador para casos particulares, complejos o en disputa. 2.3. Trinomio actualiza los parámetros legales (SMLMV, auxilio de transporte, entre otros) de forma periódica, pero no garantiza que reflejen cambios normativos publicados con posterioridad a la última actualización de la herramienta.</p>
+
+        <p><strong>3. Precios y forma de pago.</strong> 3.1. La descarga del documento de liquidación (PDF y Excel) tiene un valor de pago único de $15.000 COP por liquidación (documento sin marca), o $45.000 COP cuando el usuario opta por incluir el logotipo de su empresa. 3.2. Para contadores o empresas con varias liquidaciones al mes, existe un plan de suscripción mensual de $99.000 COP, con descargas ilimitadas durante el mes calendario adquirido. 3.3. El pago se realiza por código QR (Nequi/Bancolombia) a nombre de Trinomio SAS. El usuario debe enviar el comprobante por WhatsApp, indicando los datos de la liquidación realizada. 3.4. Verificado el pago, Trinomio entrega un código de acceso (de un solo uso para pagos individuales, o de vigencia mensual para suscripciones) para desbloquear la descarga. 3.5. Los precios podrán modificarse hacia el futuro, sin afectar pagos ya realizados.</p>
+
+        <p><strong>4. Vigencia de los códigos de acceso.</strong> 4.1. El código de pago único se inhabilita apenas se usa para desbloquear una descarga y no puede reutilizarse, salvo error técnico atribuible a Trinomio, caso en el cual se emite uno nuevo sin costo adicional. 4.2. El código de suscripción es válido solo durante el mes calendario en que fue emitido y se renueva con el pago del mes siguiente; al no renovarse, deja de ser válido desde el primer día del mes siguiente. 4.3. El usuario es responsable de la confidencialidad de su código; Trinomio no responde por el uso que terceros hagan de un código compartido por el propio usuario.</p>
+
+        <p><strong>5. Política de devoluciones y reembolsos.</strong> 5.1. Por ser un servicio digital de entrega inmediata, conforme a las excepciones al derecho de retracto del artículo 47 de la Ley 1480 de 2011 (Estatuto del Consumidor), <strong>no procede devolución por el solo hecho de haber descargado el documento generado</strong>. 5.2. Sí procede reembolso total en estos casos: (a) pago duplicado o por un valor superior al indicado; (b) imposibilidad técnica, atribuible a Trinomio, de generar o entregar el documento, no resuelta dentro de las 24 horas siguientes al reporte del usuario; (c) cobro de un servicio no prestado. 5.3. Las solicitudes de reembolso se presentan por WhatsApp dentro de los cinco (5) días calendario siguientes al pago, adjuntando el comprobante y una descripción del inconveniente. Trinomio dará respuesta dentro de los quince (15) días hábiles siguientes (art. 58, Ley 1480 de 2011). 5.4. No procede reembolso por errores en los datos ingresados por el propio usuario, cambio de opinión, o desconocimiento del funcionamiento de la herramienta.</p>
+
+        <p><strong>6. Propiedad intelectual.</strong> La calculadora, su diseño, estructura, textos y desarrollo son propiedad de Trinomio SAS. Queda prohibida su reproducción, distribución o explotación comercial no autorizada.</p>
+
+        <p><strong>7. Tratamiento de datos personales (Ley 1581 de 2012 — Habeas Data).</strong></p>
+        <p><strong>Responsable del tratamiento:</strong> Trinomio SAS, en su calidad de responsable del tratamiento de los datos personales recolectados a través de esta herramienta.</p>
+        <p><strong>Datos que se recolectan:</strong> nombre, cédula, cargo, fechas de ingreso y retiro, salario, cuenta bancaria, fondo de pensión, EPS, y los demás datos que el usuario decida ingresar en el formulario para calcular su liquidación.</p>
+        <p><strong>Finalidad:</strong> calcular la liquidación del contrato de trabajo, generar los documentos (PDF y Excel) solicitados, procesar el pago y su verificación por WhatsApp, y conservar una copia de respaldo del documento generado.</p>
+        <p><strong>Dónde quedan almacenados:</strong> en una cuenta de Google Drive y una hoja de cálculo administradas por Trinomio SAS; los datos de contacto y comprobantes de pago se reciben por WhatsApp.</p>
+        <p><strong>Carácter facultativo:</strong> el usuario decide qué información ingresa; los campos son necesarios únicamente para que el cálculo sea correcto y el documento se pueda entregar.</p>
+        <p><strong>Derechos del titular (art. 8, Ley 1581 de 2012):</strong> conocer, actualizar, rectificar y suprimir tus datos personales, así como revocar esta autorización en cualquier momento.</p>
+        <p><strong>Cómo ejercer estos derechos:</strong> escribiendo por WhatsApp a Trinomio SAS, indicando tu nombre, el dato que quieres consultar, corregir, eliminar, o la revocatoria de tu autorización.</p>
+        <p><strong>Vigencia de los datos:</strong> se conservan mientras sea necesario para la finalidad descrita, o hasta que el titular solicite su eliminación.</p>
+
+        <p><strong>8. Modificaciones.</strong> Trinomio podrá modificar estos términos en cualquier momento; se entienden aceptados por el uso continuado del servicio con posterioridad a su publicación.</p>
+
+        <p><strong>9. Ley aplicable.</strong> Estos términos se rigen por las leyes de la República de Colombia, sin perjuicio del derecho del consumidor a acudir a la Superintendencia de Industria y Comercio.</p>
+
+        <p><strong>10. Contacto.</strong> Para consultas, solicitudes de derechos ARCO o reembolsos: por WhatsApp a Trinomio SAS.</p>
+      </div>
     </div>
   </div>
 
@@ -845,7 +889,19 @@
   $('btnShowQR').addEventListener('click', ()=>{ qrBackdrop.classList.add('open'); });
   $('qrModalClose').addEventListener('click', ()=>{ qrBackdrop.classList.remove('open'); });
   qrBackdrop.addEventListener('click', (e)=>{ if(e.target === qrBackdrop) qrBackdrop.classList.remove('open'); });
-  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') qrBackdrop.classList.remove('open'); });
+
+  // ---- ventana emergente de la política de datos ----
+  const politicaBackdrop = $('politicaModalBackdrop');
+  $('verPoliticaLink').addEventListener('click', (e)=>{ e.preventDefault(); politicaBackdrop.classList.add('open'); });
+  $('politicaModalClose').addEventListener('click', ()=>{ politicaBackdrop.classList.remove('open'); });
+  politicaBackdrop.addEventListener('click', (e)=>{ if(e.target === politicaBackdrop) politicaBackdrop.classList.remove('open'); });
+
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape'){
+      qrBackdrop.classList.remove('open');
+      politicaBackdrop.classList.remove('open');
+    }
+  });
   document.querySelector('.advisory-box .price').textContent = `Asesoría directa por WhatsApp — ${fmt(ADVISORY_PRICE)}`;
 
   let lastResult = null; // datos de la última liquidación calculada, usados por el PDF/Excel
@@ -1232,7 +1288,18 @@
     $('waAsesoriaBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msgAsesoria)}`;
   }
 
-  $('btnCalcular').addEventListener('click', recalc);
+  $('btnCalcular').addEventListener('click', ()=>{
+    if(!$('aceptaDatos').checked){
+      $('aceptaDatosMsg').style.display = 'block';
+      $('aceptaDatos').focus();
+      return;
+    }
+    $('aceptaDatosMsg').style.display = 'none';
+    recalc();
+  });
+  $('aceptaDatos').addEventListener('change', ()=>{
+    if($('aceptaDatos').checked) $('aceptaDatosMsg').style.display = 'none';
+  });
   $('btnLimpiar').addEventListener('click', ()=>{
     document.querySelectorAll('input[type=text], input[type=number], input[type=date]').forEach(i=>{
       if(i.type==='number' && (i.id==='pctsalud')) { i.value = 4; }
@@ -1268,6 +1335,7 @@
     logoDims = null;
     actualizarPrecioPro();
     $('vacFormulaHint').textContent = 'Se calcula solo con el rango de fechas (días trabajados × 15 ÷ 360); ya no se puede escribir a mano.';
+    $('aceptaDatosMsg').style.display = 'none';
   });
 
   // ---- WhatsApp asesoría: enlace por defecto disponible desde el inicio ----
