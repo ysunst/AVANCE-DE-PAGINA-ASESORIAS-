@@ -747,24 +747,57 @@
   // ============ CONFIGURACIÓN — EDITA ESTOS VALORES ============
   // Número de WhatsApp de Trinomio SAS, con indicativo de país, SIN "+" ni espacios (ej. 573001234567).
   const WHATSAPP_NUMBER = '573219246512';
-  // Precio del desbloqueo de PDF + Excel por liquidación (pago único).
-  const PRO_PRICE = 15000;
+  // Precio del desbloqueo de PDF + Excel: uno sin logo (documento genérico) y otro con logo propio
+  // (marca blanca — vale más porque el documento sale con la marca de quien paga).
+  const PRO_PRICE_SIN_LOGO = 15000;
+  const PRO_PRICE_CON_LOGO = 45000;
   // Precio de la asesoría directa.
   const ADVISORY_PRICE = 50000;
   // Salario mínimo y auxilio de transporte vigentes (Decretos 1469 y 1470 de 2025, para el año 2026).
   // Actualiza estos dos valores cada vez que cambien por decreto.
   const SMLMV_VIGENTE = 1750905;
   const AUX_TRANSPORTE_VIGENTE = 249095;
-  // Lote de códigos de acceso consecutivos: entrégale uno distinto a cada cliente, en orden,
-  // después de confirmar su pago (empieza en TRI-0001). No se marcan como "usados" solos —
-  // sin un backend no hay forma de impedir que alguien reutilice uno filtrado — pero al menos
-  // no es la misma palabra para todo el mundo. Sube PRO_CODE_COUNT si necesitas más.
-  const PRO_CODE_COUNT = 50;
-  const PRO_ACCESS_CODES = Array.from({length: PRO_CODE_COUNT}, (_, i) => 'TRI-' + String(i + 1).padStart(4, '0'));
+
+  // ---- código de acceso que cambia solo cada día ----
+  // No hay backend, así que no puede invalidarse "al usarse", pero al menos ya no es la misma
+  // palabra para siempre: el código válido cambia automáticamente cada día según esta semilla.
+  // Cambia CODE_SEED cuando quieras (por ejemplo cada varios meses) para reforzarlo.
+  const CODE_SEED = 'TRINOMIO-2026';
+  function simpleHash(str){
+    let h = 2166136261;
+    for(let i = 0; i < str.length; i++){
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+  function codeForDate(dateObj){
+    const ymd = `${dateObj.getFullYear()}${String(dateObj.getMonth()+1).padStart(2,'0')}${String(dateObj.getDate()).padStart(2,'0')}`;
+    const n = (simpleHash(CODE_SEED + ymd) % 9000) + 1000;
+    return `TRI-${n}`;
+  }
+  function codesValidosHoy(){
+    const hoy = new Date();
+    const ayer = new Date(hoy); ayer.setDate(hoy.getDate() - 1);
+    return [codeForDate(hoy), codeForDate(ayer)]; // ayer incluido como margen de gracia
+  }
   // ================================================================
 
-  $('proPriceDisplay').textContent = `${fmt(PRO_PRICE)} · pago único por liquidación`;
-  $('qrModalPrice').textContent = fmt(PRO_PRICE);
+  function proPriceActual(){ return logoDataUrl ? PRO_PRICE_CON_LOGO : PRO_PRICE_SIN_LOGO; }
+  function actualizarPrecioPro(){
+    $('proPriceDisplay').textContent = `${fmt(proPriceActual())} · pago único por liquidación${logoDataUrl ? ' (con tu logo)' : ''}`;
+    $('qrModalPrice').textContent = fmt(proPriceActual());
+  }
+
+  // ---- panel de administrador: agrega ?admin=1 a la URL para ver el código de hoy ----
+  if(new URLSearchParams(window.location.search).get('admin') === '1'){
+    const codes = codesValidosHoy();
+    const box = document.createElement('p');
+    box.className = 'hint';
+    box.style.cssText = 'margin-top:10px;font-weight:600;color:var(--gold-deep);';
+    box.textContent = `[admin] Código válido hoy: ${codes[0]} (ayer también sirve: ${codes[1]})`;
+    document.querySelector('.pro-box').appendChild(box);
+  }
 
   // ---- ventana emergente del QR ----
   const qrBackdrop = $('qrModalBackdrop');
@@ -778,6 +811,7 @@
   let proUnlocked = false;
   let logoDataUrl = null; // logo del empleador (base64), usado como membrete en el PDF
   let logoDims = null; // {w,h} naturales del logo, para no deformarlo en el PDF
+  actualizarPrecioPro();
 
   // ---- logo del empleador: cargar, previsualizar y quitar ----
   $('logoInput').addEventListener('change', (e)=>{
@@ -791,6 +825,7 @@
       img.src = logoDataUrl;
       $('logoPreview').src = logoDataUrl;
       $('logoPreviewWrap').style.display = 'block';
+      actualizarPrecioPro();
     };
     reader.readAsDataURL(file);
   });
@@ -799,6 +834,7 @@
     logoDims = null;
     $('logoInput').value = '';
     $('logoPreviewWrap').style.display = 'none';
+    actualizarPrecioPro();
   });
 
 
@@ -1148,7 +1184,7 @@
     $('valorMesHint').textContent = `Valor total a pagar del mes en curso: ${fmt(valorMesEnCurso)}`;
 
     // ---- enlaces de WhatsApp (pago y asesoría) ----
-    const msgPago = `Hola Trinomio SAS, ya realicé el pago de ${fmt(PRO_PRICE)} para desbloquear el PDF y Excel de la liquidación de ${nombre} (cédula ${cedula}), neto a pagar ${fmt(neto)}. Referencia: ${refCode}. Adjunto el comprobante.`;
+    const msgPago = `Hola Trinomio SAS, ya realicé el pago de ${fmt(proPriceActual())} para desbloquear el PDF y Excel de la liquidación de ${nombre} (cédula ${cedula}), neto a pagar ${fmt(neto)}${logoDataUrl ? ' (con logo propio)' : ''}. Referencia: ${refCode}. Adjunto el comprobante.`;
     $('waPagoBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msgPago)}`;
     const msgAsesoria = `Hola Trinomio SAS, quiero contratar la asesoría directa (${fmt(ADVISORY_PRICE)}) para la liquidación de ${nombre}.`;
     $('waAsesoriaBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msgAsesoria)}`;
@@ -1188,6 +1224,7 @@
     $('logoPreviewWrap').style.display = 'none';
     logoDataUrl = null;
     logoDims = null;
+    actualizarPrecioPro();
     $('vacFormulaHint').textContent = 'Se calcula solo con el rango de fechas (días trabajados × 15 ÷ 360); ya no se puede escribir a mano.';
   });
 
@@ -1254,7 +1291,7 @@
   // ---- desbloqueo PRO ----
   $('btnUnlock').addEventListener('click', ()=>{
     const code = $('proCode').value.trim().toUpperCase();
-    if(code && PRO_ACCESS_CODES.includes(code)){
+    if(code && codesValidosHoy().includes(code)){
       proUnlocked = true;
       $('proDownloads').style.display = 'flex';
       $('btnPDF').disabled = !lastResult;
@@ -1327,11 +1364,11 @@
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const pageW = 210, marginX = 14, right = pageW - marginX, centerX = pageW / 2;
-    let y = 16;
+    let y = 15;
 
     // ---- membrete ----
     if(lastResult.logo){
-      const maxW = 26, maxH = 16;
+      const maxW = 24, maxH = 14;
       let w = maxW, h = maxH;
       if(lastResult.logoDims && lastResult.logoDims.w && lastResult.logoDims.h){
         const ratio = lastResult.logoDims.w / lastResult.logoDims.h;
@@ -1341,22 +1378,25 @@
       try{ doc.addImage(lastResult.logo, fmtType, marginX, y, w, h); }catch(e){ /* logo inválido, se omite */ }
     }
     doc.setFont('helvetica','bold'); doc.setFontSize(13);
-    doc.text(lastResult.empresa || 'Empresa', centerX, y + 5, {align:'center'});
+    doc.text(lastResult.empresa || 'Empresa', centerX, y + 4, {align:'center'});
     doc.setFont('helvetica','normal'); doc.setFontSize(9);
-    if(lastResult.nit) doc.text(`NIT: ${lastResult.nit}`, centerX, y + 10, {align:'center'});
-    y += 20;
-    doc.setLineWidth(0.4); doc.line(marginX, y, right, y); y += 8;
+    if(lastResult.nit) doc.text(`NIT: ${lastResult.nit}`, centerX, y + 9, {align:'center'});
+    y += 17;
+    doc.setLineWidth(0.4); doc.line(marginX, y, right, y); y += 7;
 
     doc.setFont('helvetica','bold'); doc.setFontSize(14);
-    doc.text('LIQUIDACIÓN DE CONTRATO', centerX, y, {align:'center'}); y += 9;
+    doc.text('LIQUIDACIÓN DE CONTRATO', centerX, y, {align:'center'}); y += 8;
 
     // ---- datos del contrato, dos columnas ----
-    const colL = marginX, colR = 108;
+    const colL = marginX, colR = 108, colGap = 2.2;
     doc.setFontSize(9);
     function kv(label, value, x, yy){
-      doc.setFont('helvetica','bold'); doc.text(`${label}:`, x, yy);
+      doc.setFont('helvetica','bold');
+      const labelTxt = `${label}:`;
+      doc.text(labelTxt, x, yy);
+      const w = doc.getTextWidth(labelTxt);
       doc.setFont('helvetica','normal');
-      doc.text(String(value ?? '-') || '-', x + doc.getTextWidth(`${label}: `) , yy);
+      doc.text(String(value ?? '-') || '-', x + w + colGap, yy);
     }
     const filas = [
       [['Empleado', lastResult.nombre], ['Identificación', lastResult.cedula]],
@@ -1374,9 +1414,9 @@
     filas.forEach(([izq, der])=>{
       kv(izq[0], izq[1], colL, y);
       kv(der[0], der[1], colR, y);
-      y += 5.2;
+      y += 5.4;
     });
-    y += 4;
+    y += 3;
 
     // ---- tabla de conceptos ----
     const tableTop = y;
@@ -1389,7 +1429,7 @@
     y += 2; doc.setLineWidth(0.3); doc.line(marginX, y, right, y); y += 5;
     doc.setFont('helvetica','normal');
     lastResult.rows.forEach(([desc,dias,dev,ded])=>{
-      if(y > 272){
+      if(y > 280){
         doc.line(marginX, y+2, right, y+2);
         doc.addPage(); y = 18;
       }
@@ -1397,7 +1437,7 @@
       doc.text(dias ? fmtDias(dias) : '—', cCant, y, {align:'right'});
       doc.text(dev ? fmt(dev) : '—', cDev, y, {align:'right'});
       doc.text(ded ? fmt(ded) : '—', cDed, y, {align:'right'});
-      y += 5.5;
+      y += 5.3;
     });
     doc.setLineWidth(0.3); doc.line(marginX, y, right, y); y += 5;
     doc.setFont('helvetica','bold');
@@ -1408,25 +1448,29 @@
     // borde exterior de la tabla
     doc.setLineWidth(0.3); doc.rect(marginX, tableTop - 4.5, right - marginX, y - (tableTop - 4.5));
     doc.line(cCant - 22, tableTop - 4.5, cCant - 22, y);
-    y += 7;
+    y += 6;
 
     doc.setFontSize(11);
     doc.text(`NETO A PAGAR: ${fmt(lastResult.neto)}`, cDesc, y);
-    y += 7;
+    y += 6;
     doc.setFont('helvetica','normal'); doc.setFontSize(9);
-    const sonLines = doc.splitTextToSize(`SON: ${valorEnLetras(lastResult.neto)}`, right - marginX);
-    doc.text(sonLines, cDesc, y); y += sonLines.length * 4.4 + 8;
+    const sonTexto = `SON: ${valorEnLetras(lastResult.neto)}`;
+    const sonLineCount = doc.splitTextToSize(sonTexto, right - marginX).length;
+    doc.text(sonTexto, cDesc, y, {maxWidth: right - marginX, align: 'justify'});
+    y += sonLineCount * 4.3 + 6;
 
     doc.setFont('helvetica','bold'); doc.setFontSize(10);
-    doc.text('CONSTANCIA DE RECIBO DE PRESTACIONES SOCIALES E INDEMNIZACIÓN', centerX, y, {align:'center'}); y += 6;
+    doc.text('CONSTANCIA DE RECIBO DE PRESTACIONES SOCIALES E INDEMNIZACIÓN', centerX, y, {align:'center'}); y += 5.5;
     doc.setFont('helvetica','normal'); doc.setFontSize(9);
-    const actaLines = doc.splitTextToSize(lastResult.actaTexto, right - marginX);
-    if(y + actaLines.length*4.4 > 280){ doc.addPage(); y = 18; }
-    doc.text(actaLines, cDesc, y); y += actaLines.length*4.4 + 4;
-    const fechaLines = doc.splitTextToSize(lastResult.actaFecha, right - marginX);
-    doc.text(fechaLines, cDesc, y); y += fechaLines.length*4.4 + 18;
+    const actaLineCount = doc.splitTextToSize(lastResult.actaTexto, right - marginX).length;
+    if(y + actaLineCount*4.3 > 282){ doc.addPage(); y = 18; }
+    doc.text(lastResult.actaTexto, cDesc, y, {maxWidth: right - marginX, align: 'justify'});
+    y += actaLineCount * 4.3 + 3;
+    doc.text(lastResult.actaFecha, cDesc, y, {maxWidth: right - marginX, align: 'justify'});
+    const fechaLineCount = doc.splitTextToSize(lastResult.actaFecha, right - marginX).length;
+    y += fechaLineCount * 4.3 + 13;
 
-    if(y > 265) { doc.addPage(); y = 40; }
+    if(y > 272) { doc.addPage(); y = 40; }
     doc.line(marginX, y, marginX + 45, y);
     doc.line(centerX - 22, y, centerX + 23, y);
     doc.line(right - 45, y, right, y);
