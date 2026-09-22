@@ -1231,6 +1231,12 @@
     const sufijoRef = Math.random().toString(36).slice(2,6).toUpperCase();
     const refCode = `REF-${fechaRef}-${sufijoRef}`;
 
+    // ---- deja constancia de que aceptó los Términos y la Política de Datos ----
+    if(BACKEND_URL && $('aceptaDatos').checked){
+      const urlConsentimiento = `${BACKEND_URL}?${new URLSearchParams({ action:'registrarConsentimiento', nombre, cedula, referencia: refCode })}`;
+      fetch(urlConsentimiento).catch(()=>{ /* si falla, no interrumpe el cálculo del usuario */ });
+    }
+
     // ---- guardar resultado para exportar a PDF / Excel ----
     lastResult = {
       empresa, nombre, cedula,
