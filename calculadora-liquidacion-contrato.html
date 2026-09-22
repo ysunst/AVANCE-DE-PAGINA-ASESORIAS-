@@ -766,44 +766,31 @@
   const SMLMV_VIGENTE = 1750905;
   const AUX_TRANSPORTE_VIGENTE = 249095;
 
-  // ---- código de acceso que cambia solo cada día (pago único por liquidación) ----
-  // No hay backend, así que no puede invalidarse "al usarse", pero al menos ya no es la misma
-  // palabra para siempre: el código válido cambia automáticamente cada día según esta semilla.
-  // Cambia CODE_SEED cuando quieras (por ejemplo cada varios meses) para reforzarlo.
-  const CODE_SEED = 'TRINOMIO-2026';
-  function simpleHash(str){
-    let h = 2166136261;
-    for(let i = 0; i < str.length; i++){
-      h ^= str.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return h >>> 0;
-  }
-  function codeForDate(dateObj){
-    const ymd = `${dateObj.getFullYear()}${String(dateObj.getMonth()+1).padStart(2,'0')}${String(dateObj.getDate()).padStart(2,'0')}`;
-    const n = (simpleHash(CODE_SEED + ymd) % 9000) + 1000;
-    return `TRI-${n}`;
-  }
-  function codesValidosHoy(){
-    const hoy = new Date();
-    const ayer = new Date(hoy); ayer.setDate(hoy.getDate() - 1);
-    return [codeForDate(hoy), codeForDate(ayer)]; // ayer incluido como margen de gracia
-  }
+  // ---- backend de códigos (Google Apps Script + Google Sheets) ----
+  // Pega aquí la URL de tu implementación (termina en /exec). Ver CodigosBackend.gs para el
+  // script que se instala en Google Sheets y las instrucciones de despliegue.
+  const BACKEND_URL = 'https://script.google.com/macros/s/AKfycby9-J4qn59LVt1ds5xlS7hGv1o_OoSsuqHHhOWl1gnzQB_MgRb0OuJw2XGoj3JiRcLz5w/exec';
 
-  // ---- código de suscripción que cambia cada mes (plan ilimitado para contadores/empresas) ----
-  // Un mismo código de suscripción sirve para TODAS las descargas de ese cliente durante el mes.
-  // Semilla distinta a la diaria para que nunca coincidan por accidente.
-  const SUB_SEED = 'TRINOMIO-SUB-2026';
-  function codeForMonth(dateObj){
-    const ym = `${dateObj.getFullYear()}${String(dateObj.getMonth()+1).padStart(2,'0')}`;
-    const n = (simpleHash(SUB_SEED + ym) % 9000) + 1000;
-    return `SUB-${n}`;
+  async function llamarBackend(params){
+    if(!BACKEND_URL){
+      return { error: true, reason: 'BACKEND_URL no está configurado todavía en el código.' };
+    }
+    try{
+      const url = `${BACKEND_URL}?${new URLSearchParams(params).toString()}`;
+      const res = await fetch(url);
+      return await res.json();
+    }catch(e){
+      return { error: true, reason: 'No se pudo conectar con el backend de códigos.' };
+    }
   }
-  function codigoSuscripcionVigente(){
-    return codeForMonth(new Date());
+  function verificarCodigoBackend(codigo){
+    return llamarBackend({ action: 'verificar', codigo });
   }
-  function esCodigoValido(code){
-    return codesValidosHoy().includes(code) || code === codigoSuscripcionVigente();
+  function generarCodigoUnicoBackend(nota){
+    return llamarBackend({ action: 'generar', nota: nota || '' });
+  }
+  function obtenerCodigoSuscripcionBackend(){
+    return llamarBackend({ action: 'suscripcion' });
   }
   // ================================================================
 
@@ -813,14 +800,32 @@
     $('qrModalPrice').textContent = fmt(proPriceActual());
   }
 
-  // ---- panel de administrador: agrega ?admin=1 a la URL para ver los códigos vigentes ----
+  // ---- panel de administrador: agrega ?admin=1 a la URL para generar y consultar códigos ----
   if(new URLSearchParams(window.location.search).get('admin') === '1'){
-    const codes = codesValidosHoy();
-    const box = document.createElement('p');
+    const box = document.createElement('div');
     box.className = 'hint';
-    box.style.cssText = 'margin-top:10px;font-weight:600;color:var(--gold-deep);';
-    box.textContent = `[admin] Código diario (pago único): ${codes[0]} (ayer también sirve: ${codes[1]}) · Código de suscripción de este mes: ${codigoSuscripcionVigente()}`;
+    box.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--rule-strong);';
+    box.innerHTML = `
+      <div style="font-weight:600;color:var(--gold-deep);margin-bottom:6px;">[admin] Generación de códigos</div>
+      <button type="button" id="btnGenUnico" class="addline" style="width:auto;padding:6px 12px;margin-right:8px;">Generar código de un solo uso</button>
+      <button type="button" id="btnGenSub" class="addline" style="width:auto;padding:6px 12px;">Ver código de suscripción de este mes</button>
+      <div id="adminResultado" style="margin-top:8px;font-weight:600;"></div>
+    `;
     document.querySelector('.pro-box').appendChild(box);
+    document.getElementById('btnGenUnico').addEventListener('click', async ()=>{
+      document.getElementById('adminResultado').textContent = 'Generando...';
+      const r = await generarCodigoUnicoBackend();
+      document.getElementById('adminResultado').textContent = r.codigo
+        ? `Nuevo código de un solo uso: ${r.codigo}`
+        : `Error: ${r.reason || 'no se pudo generar'}`;
+    });
+    document.getElementById('btnGenSub').addEventListener('click', async ()=>{
+      document.getElementById('adminResultado').textContent = 'Consultando...';
+      const r = await obtenerCodigoSuscripcionBackend();
+      document.getElementById('adminResultado').textContent = r.codigo
+        ? `Código de suscripción de este mes: ${r.codigo}`
+        : `Error: ${r.reason || 'no se pudo obtener'}`;
+    });
   }
 
   // ---- ventana emergente del QR ----
@@ -1315,21 +1320,36 @@
   });
 
   // ---- desbloqueo PRO ----
-  $('btnUnlock').addEventListener('click', ()=>{
+  $('btnUnlock').addEventListener('click', async ()=>{
     const code = $('proCode').value.trim().toUpperCase();
-    if(code && esCodigoValido(code)){
+    if(!code){
+      $('proMsg').textContent = 'Escribe tu código de acceso.';
+      $('proMsg').style.color = 'var(--brick)';
+      return;
+    }
+    $('btnUnlock').disabled = true;
+    $('proMsg').textContent = 'Verificando código...';
+    $('proMsg').style.color = 'var(--ink-soft)';
+    const r = await verificarCodigoBackend(code);
+    $('btnUnlock').disabled = false;
+    if(r.error){
+      $('proMsg').textContent = `No se pudo verificar el código: ${r.reason}`;
+      $('proMsg').style.color = 'var(--brick)';
+      return;
+    }
+    if(r.valid){
       proUnlocked = true;
       $('proDownloads').style.display = 'flex';
       $('btnPDF').disabled = !lastResult;
       $('btnWorksheetPDF').disabled = !lastResult;
       $('btnExcel').disabled = !lastResult;
-      const esSuscripcion = code === codigoSuscripcionVigente();
+      const esSuscripcion = r.tipo === 'suscripcion';
       $('proMsg').textContent = lastResult
         ? `Acceso desbloqueado${esSuscripcion ? ' (plan mensual)' : ''}. Ya puedes descargar el PDF y el Excel de esta liquidación.`
         : 'Acceso desbloqueado. Calcula la liquidación para habilitar la descarga.';
       $('proMsg').style.color = 'var(--green)';
     } else {
-      $('proMsg').textContent = 'Código no válido. Si ya pagaste, escríbenos por WhatsApp y te lo confirmamos.';
+      $('proMsg').textContent = r.reason || 'Código no válido. Si ya pagaste, escríbenos por WhatsApp y te lo confirmamos.';
       $('proMsg').style.color = 'var(--brick)';
     }
   });
