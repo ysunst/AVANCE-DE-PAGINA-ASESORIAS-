@@ -835,8 +835,8 @@
       const blob = doc.output('blob');
       const r = await guardarPDFEnDrive('prueba_respaldo.pdf', blob, { nombre: 'Prueba admin', cedula: '0000', tipo: 'prueba', codigo: 'TEST' });
       document.getElementById('adminResultado').textContent = r.ok
-        ? '✓ Se envió sin error de conexión. Revisa la carpeta de Drive y la hoja "Liquidaciones" para confirmar que llegó "prueba_respaldo.pdf" (no podemos leer la confirmación por una restricción del navegador).'
-        : `✗ Ni siquiera se pudo enviar: ${r.error}`;
+        ? `✓ El respaldo SÍ funciona. Archivo guardado: ${r.url}`
+        : `✗ El respaldo falló: ${r.error}`;
     });
   }
 
@@ -1396,7 +1396,7 @@
     });
   }
   async function guardarPDFEnDrive(filename, blob, metaOverride){
-    if(!BACKEND_URL) return { ok:false, sinConfirmar:false, error:'BACKEND_URL vacío' };
+    if(!BACKEND_URL) return { ok:false, error:'BACKEND_URL vacío' };
     try{
       const base64 = await blobToBase64(blob);
       const meta = metaOverride || {
@@ -1405,19 +1405,16 @@
         tipo: tipoAccesoActual || '',
         codigo: $('proCode').value.trim().toUpperCase(),
       };
-      // Google Apps Script redirige internamente el POST y el navegador bloquea la
-      // lectura de esa respuesta por CORS, aunque el archivo sí llega a guardarse.
-      // Por eso se envía en modo "no-cors": no podemos leer si salió bien, pero sí
-      // se entrega. Confirma revisando la carpeta de Drive directamente.
-      await fetch(BACKEND_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'guardarPDF', filename, base64, meta }),
-      });
-      return { ok:true, sinConfirmar:true };
+      const params = new URLSearchParams();
+      params.set('action', 'guardarPDF');
+      params.set('filename', filename);
+      params.set('base64', base64);
+      params.set('meta', JSON.stringify(meta));
+      const res = await fetch(BACKEND_URL, { method: 'POST', body: params });
+      const data = await res.json();
+      return data.ok ? { ok:true, url:data.url } : { ok:false, error: data.error || 'respuesta sin "ok"' };
     }catch(e){
-      return { ok:false, sinConfirmar:false, error: String(e && e.message || e) };
+      return { ok:false, error: String(e && e.message || e) };
     }
   }
 
@@ -1763,8 +1760,8 @@
       $('btnPDF').disabled = true;
       const arch = await guardarPDFEnDrive(filename, blob);
       $('proMsg').textContent = arch.ok
-        ? 'PDF descargado. Se envió al respaldo de Drive.'
-        : `PDF descargado, pero no se pudo enviar el respaldo: ${arch.error}`;
+        ? 'PDF descargado y respaldado en Drive ✓'
+        : `PDF descargado, pero el respaldo en Drive falló: ${arch.error}`;
       $('proMsg').style.color = arch.ok ? 'var(--green)' : 'var(--brick)';
     }catch(e){ $('proMsg').textContent = 'No se pudo generar el PDF. Intenta de nuevo.'; }
   });
@@ -1779,8 +1776,8 @@
       $('btnWorksheetPDF').disabled = true;
       const arch = await guardarPDFEnDrive(filename, blob);
       $('proMsg').textContent = arch.ok
-        ? 'PDF descargado. Se envió al respaldo de Drive.'
-        : `PDF descargado, pero no se pudo enviar el respaldo: ${arch.error}`;
+        ? 'PDF descargado y respaldado en Drive ✓'
+        : `PDF descargado, pero el respaldo en Drive falló: ${arch.error}`;
       $('proMsg').style.color = arch.ok ? 'var(--green)' : 'var(--brick)';
     }catch(e){ $('proMsg').textContent = 'No se pudo generar la hoja de trabajo. Intenta de nuevo.'; }
   });
