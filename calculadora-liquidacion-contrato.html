@@ -418,6 +418,27 @@
 <main>
   <section class="card">
 
+    <div class="group" id="grupoTipoUsuario" style="background:var(--paper-raised); border:1px solid var(--rule-strong); border-radius:4px; padding:22px 24px; margin-bottom:6px;">
+      <h2 style="margin-bottom:14px;">Antes de empezar</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="tipoUsuario">¿Quién está calculando la liquidación?</label>
+          <select id="tipoUsuario">
+            <option value="empresa">Soy la empresa o el contador (voy a emitir el documento)</option>
+            <option value="empleado">Soy el empleado (solo quiero verificar mi liquidación)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="periodicidadPago">¿La nómina se paga mensual o quincenal?</label>
+          <select id="periodicidadPago">
+            <option value="mensual">Mensual</option>
+            <option value="quincenal">Quincenal</option>
+          </select>
+        </div>
+      </div>
+      <p class="hint" id="tipoUsuarioHint" style="margin-top:10px;"></p>
+    </div>
+
     <div class="group">
       <h2><span class="idx">1</span> Datos del empleado</h2>
       <div class="grid">
@@ -425,16 +446,16 @@
           <label for="empresa">Empresa (razón social)</label>
           <input type="text" id="empresa" placeholder="Trinomio SAS">
         </div>
-        <div class="field">
+        <div class="field campo-empresa">
           <label for="nit">NIT del empleador</label>
           <input type="text" id="nit" inputmode="numeric" placeholder="900123456-7">
         </div>
-        <div class="field">
+        <div class="field campo-empresa">
           <label for="logoInput">Logo de la empresa (opcional, para membrete)</label>
           <input type="file" id="logoInput" accept="image/png,image/jpeg">
           <span class="hint" id="logoHint">Si lo subes, se usa como encabezado en el PDF; en el Excel solo se agrega el nombre y NIT (la librería gratuita no soporta imágenes).</span>
         </div>
-        <div class="field span2" id="logoPreviewWrap" style="display:none;">
+        <div class="field span2 campo-empresa" id="logoPreviewWrap" style="display:none;">
           <label>Vista previa del membrete</label>
           <img id="logoPreview" alt="Logo de la empresa" style="max-height:60px; max-width:220px; object-fit:contain; border:1px solid var(--rule-strong); border-radius:3px; padding:4px; background:#fff;">
           <button type="button" class="addline" id="btnQuitarLogo" style="width:auto; margin-top:6px; padding:6px 12px;">Quitar logo</button>
@@ -456,17 +477,17 @@
           <input type="text" id="departamento" placeholder="Escribe el departamento (ej: Cundinamarca)">
           <span class="hint">Departamento de Colombia donde presta el servicio el empleado.</span>
         </div>
-        <div class="field">
+        <div class="field campo-empresa">
           <label for="centrocosto">Centro de costo</label>
           <input type="text" id="centrocosto" placeholder="Escribe el centro de costo (ej: Zona Norte)">
           <span class="hint">Código o nombre del centro de costo asignado por la empresa.</span>
         </div>
-        <div class="field">
+        <div class="field campo-empresa">
           <label for="nocontrato">No. de contrato</label>
           <input type="text" id="nocontrato" placeholder="Escribe el número de contrato (ej: 2797)">
           <span class="hint">Número o consecutivo interno del contrato de trabajo.</span>
         </div>
-        <div class="field">
+        <div class="field campo-empresa">
           <label for="cuenta">Cuenta bancaria de pago</label>
           <input type="text" id="cuenta" placeholder="Escribe la cuenta de pago (ej: 1234567890)">
           <span class="hint">Cuenta donde se consignará el pago de la liquidación.</span>
@@ -481,7 +502,7 @@
           <input type="text" id="eps" placeholder="Escribe la EPS (ej: Sura EPS, Salud Total)">
           <span class="hint">Entidad Promotora de Salud a la que está afiliado el empleado.</span>
         </div>
-        <div class="field span2">
+        <div class="field span2 campo-empresa">
           <label for="regimencesantias">Régimen de cesantías</label>
           <select id="regimencesantias">
             <option value="Ley 50 de 1990">Ley 50 de 1990 (anualizado, fondo privado)</option>
@@ -584,7 +605,8 @@
         </div>
         <div class="field">
           <label for="vacFin">Días trabajados sin disfrutar vacaciones — hasta</label>
-          <input type="date" id="vacFin">
+          <input type="date" id="vacFin" readonly style="background:var(--paper); color:var(--ink-soft); cursor:not-allowed;">
+          <span class="hint">Se llena sola con la fecha de retiro.</span>
         </div>
         <div class="field">
           <label for="diasvacpend">Días de vacaciones causados (calculado)</label>
@@ -634,6 +656,12 @@
         <div class="field">
           <label for="retefuente">Retención en la fuente (valor manual)</label>
           <input type="number" id="retefuente" min="0" step="1000" value="0">
+          <span class="hint">Ingresa el valor si aplica retención según el procedimiento (1 o 2) que corresponda al caso; no se calcula automáticamente porque depende de datos adicionales (declarante o no, procedimiento elegido, otros ingresos).</span>
+        </div>
+        <div class="field">
+          <label for="fsp">Fondo de Solidaridad Pensional — FSP (calculado)</label>
+          <input type="number" id="fsp" min="0" step="1000" value="0" readonly style="background:var(--paper); color:var(--ink-soft); cursor:not-allowed;">
+          <span class="hint" id="fspHint">Aplica solo si el salario es de 4 SMLMV o más (Ley 100 de 1993); si no aplica, queda en $0.</span>
         </div>
       </div>
       <div id="deduccionesExtra"></div>
@@ -809,6 +837,19 @@
   // Actualiza estos dos valores cada vez que cambien por decreto.
   const SMLMV_VIGENTE = 1750905;
   const AUX_TRANSPORTE_VIGENTE = 249095;
+  // UVT vigente (Resolución DIAN 000238 del 15 de diciembre de 2025, para el año 2026).
+  // ---- FSP: Fondo de Solidaridad Pensional (Ley 100 de 1993, art. 20-22) ----
+  // Aporte adicional de pensión para quienes devengan 4 SMLMV o más.
+  function calcularPorcentajeFSP(salarioMensual){
+    const smlmvs = salarioMensual / SMLMV_VIGENTE;
+    if(smlmvs < 4) return 0;
+    if(smlmvs < 16) return 0.01;
+    if(smlmvs < 17) return 0.012;
+    if(smlmvs < 18) return 0.014;
+    if(smlmvs < 19) return 0.016;
+    if(smlmvs < 20) return 0.018;
+    return 0.02;
+  }
 
   // ---- backend de códigos (Google Apps Script + Google Sheets) ----
   // Pega aquí la URL de tu implementación (termina en /exec). Ver CodigosBackend.gs para el
@@ -991,14 +1032,51 @@
   }
 
   // ---- auto-fill días pendientes de salario when fecha retiro changes ----
+  function diasPendientesSegunPeriodicidad(fr){
+    let inicioPeriodo;
+    if($('periodicidadPago').value === 'quincenal'){
+      inicioPeriodo = fr.getDate() <= 15
+        ? new Date(fr.getFullYear(), fr.getMonth(), 1)
+        : new Date(fr.getFullYear(), fr.getMonth(), 16);
+    } else {
+      inicioPeriodo = new Date(fr.getFullYear(), fr.getMonth(), 1);
+    }
+    const fi = parseDate($('fingreso').value);
+    const inicioReal = (fi && fi > inicioPeriodo) ? fi : inicioPeriodo;
+    const dias = Math.round((fr - inicioReal) / 86400000) + 1; // inclusive
+    return Math.max(dias, 0);
+  }
   $('fretiro').addEventListener('change', ()=>{
     const fr = parseDate($('fretiro').value);
     if(fr){
-      const d = Math.min(fr.getDate(), 30);
-      $('diassalariopend').value = d;
-      if(!$('vacFin').value) $('vacFin').value = $('fretiro').value;
+      $('diassalariopend').value = diasPendientesSegunPeriodicidad(fr);
+      $('vacFin').value = $('fretiro').value;
+      recalcVacRange();
     }
   });
+  $('periodicidadPago').addEventListener('change', ()=>{
+    const fr = parseDate($('fretiro').value);
+    if(fr) $('diassalariopend').value = diasPendientesSegunPeriodicidad(fr);
+  });
+
+  // ---- tipo de usuario: oculta los campos exclusivos de empresa si es un empleado ----
+  function actualizarTipoUsuario(){
+    const esEmpleado = $('tipoUsuario').value === 'empleado';
+    document.querySelectorAll('.campo-empresa').forEach(el=>{
+      if(el.id === 'logoPreviewWrap'){
+        // este ya se controla solo por si hay logo cargado; solo forzamos ocultarlo si es empleado
+        if(esEmpleado) el.style.display = 'none';
+      } else {
+        el.style.display = esEmpleado ? 'none' : '';
+      }
+      el.querySelectorAll('input, select').forEach(inp => inp.disabled = esEmpleado);
+    });
+    $('tipoUsuarioHint').textContent = esEmpleado
+      ? 'Como empleado, solo ves los campos que necesitas para verificar tu propia liquidación. El PDF tampoco incluirá los datos administrativos de la empresa (NIT, centro de costo, No. de contrato, cuenta de pago, régimen de cesantías ni membrete).'
+      : 'Como empresa o contador, tienes disponibles todos los campos para emitir el documento formal completo.';
+  }
+  $('tipoUsuario').addEventListener('change', actualizarTipoUsuario);
+  actualizarTipoUsuario();
 
   // ---- auxilio de transporte: se calcula solo según el salario (regla de 2 SMLMV, año 2026) ----
   $('salario').addEventListener('input', ()=>{
@@ -1073,7 +1151,6 @@
     const comisiones = parseFloat($('comisiones').value) || 0;
     const pctSalud = (parseFloat($('pctsalud').value) || 0)/100;
     const pctPension = (parseFloat($('pctpension').value) || 0)/100;
-    const reteFuente = parseFloat($('retefuente').value) || 0;
     let diasSalarioPend = parseFloat($('diassalariopend').value);
     if(isNaN(diasSalarioPend)) diasSalarioPend = 0;
     const horasExtrasMes = parseFloat($('horasExtrasMes').value) || 0;
@@ -1147,8 +1224,20 @@
     const salud = baseAportes * pctSalud;
     const pension = baseAportes * pctPension;
 
+    // ---- FSP: aplica solo si el salario mensual es de 4 SMLMV o más ----
+    const pctFSP = calcularPorcentajeFSP(salario);
+    const fsp = baseAportes * pctFSP;
+
+    // ---- retención en la fuente: valor manual (depende del procedimiento 1 o 2, declarante o no,
+    // y otros datos que esta calculadora no recopila; el usuario lo ingresa si aplica) ----
+    const reteFuente = parseFloat($('retefuente').value) || 0;
+    $('fsp').value = Math.round(fsp);
+    $('fspHint').textContent = pctFSP > 0
+      ? `Aplica: ${(pctFSP*100).toFixed(1)}% adicional de pensión (salario ≥ 4 SMLMV).`
+      : 'No aplica: el salario es menor a 4 SMLMV ($' + (4*SMLMV_VIGENTE).toLocaleString('es-CO') + ').';
+
     const totalDevengado = salarioPendiente + transportePendiente + horasExtrasMes + recargosMes + dominicalesMes + cesantias + interesesCesantias + prima + vacaciones + indemnizacion + sumDevExtra;
-    const totalDeducido = salud + pension + reteFuente + sumDedExtra;
+    const totalDeducido = salud + pension + fsp + reteFuente + sumDedExtra;
     const neto = totalDevengado - totalDeducido;
 
     // ---- mini summary ----
@@ -1190,7 +1279,8 @@
     devExtra.forEach(l => rows.push([l.desc + (l.prest ? ' (prestacional)' : ' (no salarial)'), 0, l.val, 0]));
     rows.push(['Salud empleado', diasSalarioPend, 0, salud]);
     rows.push(['Pensión empleado', diasSalarioPend, 0, pension]);
-    if(reteFuente>0) rows.push(['Retención en la fuente', 0, 0, reteFuente]);
+    if(fsp > 0) rows.push(['Fondo de Solidaridad Pensional (FSP)', diasSalarioPend, 0, fsp]);
+    if(reteFuente > 0) rows.push(['Retención en la fuente', 0, 0, reteFuente]);
     dedExtra.forEach(l => rows.push([l.desc, 0, 0, l.val]));
 
     const tbody = $('reportBody');
@@ -1238,19 +1328,21 @@
     }
 
     // ---- guardar resultado para exportar a PDF / Excel ----
+    const esEmpleadoActual = $('tipoUsuario').value === 'empleado';
     lastResult = {
       empresa, nombre, cedula,
-      nit: $('nit').value.trim(),
-      logo: logoDataUrl,
+      esEmpleado: esEmpleadoActual,
+      nit: esEmpleadoActual ? '' : $('nit').value.trim(),
+      logo: esEmpleadoActual ? null : logoDataUrl,
       logoDims,
       cargo: $('cargo').value.trim(),
       departamento: $('departamento').value.trim(),
-      centroCosto: $('centrocosto').value.trim(),
-      noContrato: $('nocontrato').value.trim(),
-      cuenta: $('cuenta').value.trim(),
+      centroCosto: esEmpleadoActual ? '' : $('centrocosto').value.trim(),
+      noContrato: esEmpleadoActual ? '' : $('nocontrato').value.trim(),
+      cuenta: esEmpleadoActual ? '' : $('cuenta').value.trim(),
       fondoPension: $('fondopension').value.trim(),
       eps: $('eps').value.trim(),
-      regimenCesantias: $('regimencesantias').options[$('regimencesantias').selectedIndex].text,
+      regimenCesantias: esEmpleadoActual ? '' : $('regimencesantias').options[$('regimencesantias').selectedIndex].text,
       tipoContratoLabel: $('tipocontrato').options[$('tipocontrato').selectedIndex].text,
       causaLabel: $('causa').options[$('causa').selectedIndex].text,
       fingresoStr: $('fingreso').value, fretiroStr: $('fretiro').value,
@@ -1271,6 +1363,7 @@
         tipoContrato, generaIndemnizacion, supera10,
         diasRestantesPactado, diasIndemnizacion, indemnizacion,
         pctSalud: pctSalud*100, pctPension: pctPension*100, baseAportes, salud, pension, reteFuente,
+        pctFSP: pctFSP*100, fsp,
         devExtra, dedExtra, sumDevExtra, sumDedExtra, sumDevPrestacional,
         cesantias, interesesCesantias, prima, vacaciones,
         salarioPendiente, transportePendiente,
@@ -1316,6 +1409,9 @@
     $('devengadosExtra').innerHTML = '';
     $('deduccionesExtra').innerHTML = '';
     $('tipocontrato').value = 'indefinido';
+    $('tipoUsuario').value = 'empresa';
+    $('periodicidadPago').value = 'mensual';
+    actualizarTipoUsuario();
     $('regimencesantias').value = 'Ley 50 de 1990';
     $('causa').value = 'despido_sin_justa';
     $('generaIndemnizacion').checked = true;
@@ -1335,6 +1431,9 @@
     $('valorMesHint').textContent = 'Valor total a pagar del mes en curso: $ 0';
     $('transporte').value = 0;
     $('transporteHint').textContent = 'Se calcula solo: aplica $249.095 (2026) si el salario es de hasta 2 SMLMV ($3.501.810); si es mayor, no aplica.';
+    $('retefuente').value = 0;
+    $('fsp').value = 0;
+    $('fspHint').textContent = 'Aplica solo si el salario es de 4 SMLMV o más (Ley 100 de 1993); si no aplica, queda en $0.';
     $('logoInput').value = '';
     $('logoPreviewWrap').style.display = 'none';
     logoDataUrl = null;
@@ -1571,24 +1670,39 @@
       doc.setFont('helvetica','normal');
       doc.text(String(value ?? '-') || '-', x + w + colGap, yy);
     }
-    const filas = [
-      [['Empleado', lastResult.nombre], ['Identificación', lastResult.cedula]],
-      [['Departamento', lastResult.departamento], ['Centro de costo', lastResult.centroCosto]],
-      [['Régimen cesantías', lastResult.regimenCesantias], ['No. contrato', lastResult.noContrato]],
-      [['Tipo de contrato', lastResult.tipoContratoLabel], ['Cuenta de pago', lastResult.cuenta]],
-      [['Último cargo', lastResult.cargo], ['Pensión', lastResult.fondoPension]],
-      [['Causa de terminación', lastResult.causaLabel], ['Salud', lastResult.eps]],
-      [['Fecha ingreso', lastResult.fingresoStr], ['Fecha retiro', lastResult.fretiroStr]],
-      [['Días totales', fmtDias(lastResult.diasTotales)], ['Días licencia', fmtDias(lastResult.diasLicencia)]],
-      [['Días netos', fmtDias(lastResult.diasNetos)], ['Último sueldo', fmt(lastResult.salario)]],
-      [['Base cesantías', fmt(lastResult.baseCesantias)], ['Base prima', fmt(lastResult.basePrima)]],
-      [['Base vacaciones', fmt(lastResult.baseVacaciones)], ['Código de referencia', lastResult.refCode]],
+    let entradas = [
+      ['Empleado', lastResult.nombre],
+      ['Identificación', lastResult.cedula],
+      ['Departamento', lastResult.departamento],
+      ['Centro de costo', lastResult.centroCosto],
+      ['Régimen cesantías', lastResult.regimenCesantias],
+      ['No. contrato', lastResult.noContrato],
+      ['Tipo de contrato', lastResult.tipoContratoLabel],
+      ['Cuenta de pago', lastResult.cuenta],
+      ['Último cargo', lastResult.cargo],
+      ['Pensión', lastResult.fondoPension],
+      ['Causa de terminación', lastResult.causaLabel],
+      ['Salud', lastResult.eps],
+      ['Fecha ingreso', lastResult.fingresoStr],
+      ['Fecha retiro', lastResult.fretiroStr],
+      ['Días totales', fmtDias(lastResult.diasTotales)],
+      ['Días licencia', fmtDias(lastResult.diasLicencia)],
+      ['Días netos', fmtDias(lastResult.diasNetos)],
+      ['Último sueldo', fmt(lastResult.salario)],
+      ['Base cesantías', fmt(lastResult.baseCesantias)],
+      ['Base prima', fmt(lastResult.basePrima)],
+      ['Base vacaciones', fmt(lastResult.baseVacaciones)],
+      ['Código de referencia', lastResult.refCode],
     ];
-    filas.forEach(([izq, der])=>{
-      kv(izq[0], izq[1], colL, y);
-      kv(der[0], der[1], colR, y);
+    if(lastResult.esEmpleado){
+      const soloEmpresa = new Set(['Centro de costo', 'Régimen cesantías', 'No. contrato', 'Cuenta de pago']);
+      entradas = entradas.filter(([label]) => !soloEmpresa.has(label));
+    }
+    for(let i = 0; i < entradas.length; i += 2){
+      kv(entradas[i][0], entradas[i][1], colL, y);
+      if(entradas[i+1]) kv(entradas[i+1][0], entradas[i+1][1], colR, y);
       y += 5.4;
-    });
+    }
     y += 3;
 
     // ---- tabla de conceptos ----
@@ -1690,17 +1804,17 @@
 
     seccion('1. Datos generales');
     linea('Empresa', lastResult.empresa);
-    linea('NIT', lastResult.nit);
+    if(!lastResult.esEmpleado) linea('NIT', lastResult.nit);
     linea('Empleado', lastResult.nombre);
     linea('Cédula', lastResult.cedula);
     linea('Cargo', lastResult.cargo);
     linea('Departamento', lastResult.departamento);
-    linea('Centro de costo', lastResult.centroCosto);
-    linea('No. de contrato', lastResult.noContrato);
-    linea('Cuenta de pago', lastResult.cuenta);
+    if(!lastResult.esEmpleado) linea('Centro de costo', lastResult.centroCosto);
+    if(!lastResult.esEmpleado) linea('No. de contrato', lastResult.noContrato);
+    if(!lastResult.esEmpleado) linea('Cuenta de pago', lastResult.cuenta);
     linea('Fondo de pensión', lastResult.fondoPension);
     linea('EPS / Fondo de salud', lastResult.eps);
-    linea('Régimen de cesantías', lastResult.regimenCesantias);
+    if(!lastResult.esEmpleado) linea('Régimen de cesantías', lastResult.regimenCesantias);
     linea('Código de referencia', lastResult.refCode);
 
     seccion('2. Contrato y fechas');
@@ -1760,7 +1874,9 @@
     linea('Base de aportes (salario ordinario del período final)', fmt(d.baseAportes));
     linea('Valor salud empleado', fmt(d.salud));
     linea('Valor pensión empleado', fmt(d.pension));
-    linea('Retención en la fuente', fmt(d.reteFuente));
+    linea('% FSP adicional (si aplica, 4+ SMLMV)', `${d.pctFSP.toFixed(1)}%`);
+    linea('Valor FSP', fmt(d.fsp));
+    linea('Retención en la fuente (valor manual)', fmt(d.reteFuente));
 
     if(d.devExtra && d.devExtra.length){
       seccion('8. Otros devengados');
@@ -1783,7 +1899,7 @@
   }
 
   function buildExcel(){
-    const wsData = [
+    let wsData = [
       ['LIQUIDACIÓN DE CONTRATO'],
       ['Empresa', lastResult.empresa || ''],
       ['NIT', lastResult.nit || ''],
@@ -1812,6 +1928,10 @@
       [],
       ['Concepto', 'Días', 'Devengado', 'Deducido'],
     ];
+    if(lastResult.esEmpleado){
+      const soloEmpresa = new Set(['NIT', 'Centro de costo', 'Régimen cesantías', 'No. de contrato', 'Cuenta de pago']);
+      wsData = wsData.filter(row => !(row.length && soloEmpresa.has(row[0])));
+    }
     lastResult.rows.forEach(([desc,dias,dev,ded])=> wsData.push([desc, dias||0, dev||0, ded||0]));
     wsData.push(['Totales', '', lastResult.totalDevengado, lastResult.totalDeducido]);
     wsData.push(['Neto a pagar', '', '', lastResult.neto]);
@@ -1876,4 +1996,4 @@
 
 </script>
 </body>
-</html>     
+</html>
