@@ -934,6 +934,52 @@
         ? `✓ El respaldo SÍ funciona. Archivo guardado: ${r.url}`
         : `✗ El respaldo falló: ${r.error}`;
     });
+
+    // ---- moderación de reseñas ----
+    const boxResenas = document.createElement('div');
+    boxResenas.className = 'hint';
+    boxResenas.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--rule-strong);';
+    boxResenas.innerHTML = `
+      <div style="font-weight:600;color:var(--gold-deep);margin-bottom:6px;">[admin] Reseñas pendientes de aprobar</div>
+      <button type="button" id="btnCargarResenas" class="addline" style="width:auto;padding:6px 12px;">Cargar reseñas pendientes</button>
+      <div id="listaResenasPendientes" style="margin-top:10px;"></div>
+    `;
+    document.querySelector('.reviews-box').appendChild(boxResenas);
+
+    async function cargarResenasPendientes(){
+      const lista = document.getElementById('listaResenasPendientes');
+      lista.innerHTML = 'Cargando...';
+      const r = await llamarBackend({ action: 'listarResenasPendientes' });
+      if(!r.ok || !r.resenas || !r.resenas.length){
+        lista.innerHTML = '<span class="hint">No hay reseñas pendientes.</span>';
+        return;
+      }
+      lista.innerHTML = '';
+      r.resenas.forEach(res=>{
+        const item = document.createElement('div');
+        item.style.cssText = 'border:1px solid var(--rule); border-radius:4px; padding:10px 12px; margin-bottom:8px;';
+        item.innerHTML = `
+          <div style="color:var(--gold); font-size:.9rem;">${'★'.repeat(res.estrellas)}${'☆'.repeat(5-res.estrellas)}</div>
+          <div style="font-size:.86rem; margin:4px 0;">${escapeHtml(res.comentario)}</div>
+          <div class="hint" style="margin-bottom:6px;">— ${escapeHtml(res.nombre)}</div>
+          <button type="button" class="addline btn-aprobar" style="width:auto; padding:5px 10px; margin-right:6px; display:inline-block;">Aprobar</button>
+          <button type="button" class="addline btn-rechazar" style="width:auto; padding:5px 10px; display:inline-block; color:var(--brick);">Rechazar</button>
+        `;
+        item.querySelector('.btn-aprobar').addEventListener('click', async ()=>{
+          item.textContent = 'Aprobando...';
+          await llamarBackend({ action: 'aprobarResena', id: res.id });
+          cargarResenasPendientes();
+          renderPublishedReviews();
+        });
+        item.querySelector('.btn-rechazar').addEventListener('click', async ()=>{
+          item.textContent = 'Rechazando...';
+          await llamarBackend({ action: 'rechazarResena', id: res.id });
+          cargarResenasPendientes();
+        });
+        lista.appendChild(item);
+      });
+    }
+    document.getElementById('btnCargarResenas').addEventListener('click', cargarResenasPendientes);
   }
 
   // ---- ventana emergente del QR ----
@@ -1459,36 +1505,37 @@
   $('subPriceDisplay').textContent = `Plan mensual — descargas ilimitadas por ${fmt(SUBSCRIPTION_PRICE)}/mes`;
   $('waSuscripcionBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola Trinomio SAS, soy contador/empresa y quiero el plan mensual de descargas ilimitadas ('+fmt(SUBSCRIPTION_PRICE)+'/mes) de la calculadora de liquidación.')}`;
 
-  // ============ TESTIMONIOS PUBLICADOS — EDITA ESTA LISTA A MANO ============
-  // Estos son los que se muestran como "publicados" en la página. Los comentarios que
-  // la gente envía por el formulario de abajo te llegan por WhatsApp; si quieres mostrar
-  // alguno aquí, agrégalo tú mismo a este arreglo.
-  const PUBLISHED_REVIEWS = [
-    // { name: 'María Pérez', stars: 5, text: 'Me ayudó a entender mi liquidación al detalle.' },
-  ];
-  // ================================================================
-
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  function renderPublishedReviews(){
+  async function renderPublishedReviews(){
     const wrap = $('publishedReviews');
-    if(!PUBLISHED_REVIEWS.length){
+    if(!BACKEND_URL){
       wrap.innerHTML = '<p class="hint">Aún no hay testimonios publicados.</p>';
       return;
     }
-    wrap.innerHTML = PUBLISHED_REVIEWS.map(r => `
-      <div class="review-card">
-        <div class="review-stars">${'★'.repeat(r.stars)}${'☆'.repeat(5 - r.stars)}</div>
-        <p class="review-text">${escapeHtml(r.text)}</p>
-        <p class="review-name">— ${escapeHtml(r.name || 'Cliente')}</p>
-      </div>
-    `).join('');
+    try{
+      const r = await llamarBackend({ action: 'listarResenasAprobadas' });
+      const resenas = (r.ok && r.resenas) ? r.resenas : [];
+      if(!resenas.length){
+        wrap.innerHTML = '<p class="hint">Aún no hay testimonios publicados.</p>';
+        return;
+      }
+      wrap.innerHTML = resenas.map(r => `
+        <div class="review-card">
+          <div class="review-stars">${'★'.repeat(r.estrellas)}${'☆'.repeat(5 - r.estrellas)}</div>
+          <p class="review-text">${escapeHtml(r.comentario)}</p>
+          <p class="review-name">— ${escapeHtml(r.nombre || 'Cliente')}</p>
+        </div>
+      `).join('');
+    }catch(e){
+      wrap.innerHTML = '<p class="hint">Aún no hay testimonios publicados.</p>';
+    }
   }
   renderPublishedReviews();
 
-  // ---- selector de estrellas y envío del comentario por WhatsApp ----
+  // ---- selector de estrellas y envío del comentario (queda pendiente de aprobación) ----
   let selectedStars = 0;
   document.querySelectorAll('#starPicker .star').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -1498,7 +1545,7 @@
       });
     });
   });
-  $('btnPublishReview').addEventListener('click', ()=>{
+  $('btnPublishReview').addEventListener('click', async ()=>{
     if(!selectedStars){
       $('reviewMsg').textContent = 'Selecciona de 1 a 5 estrellas antes de enviar.';
       $('reviewMsg').style.color = 'var(--brick)';
@@ -1506,14 +1553,21 @@
     }
     const texto = $('reviewText').value.trim();
     const nombreCliente = $('nombre').value.trim() || 'Cliente';
-    const estrellasTxt = '★'.repeat(selectedStars) + '☆'.repeat(5 - selectedStars);
-    const msg = `Hola Trinomio SAS, quiero dejar una reseña de la calculadora de liquidación.\nCalificación: ${estrellasTxt} (${selectedStars}/5)\nComentario: ${texto || '(sin comentario)'}\nNombre: ${nombreCliente}`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
-    $('reviewMsg').textContent = 'Gracias, tu comentario se envió por WhatsApp. Si lo publicamos, lo verás en esta sección.';
-    $('reviewMsg').style.color = 'var(--green)';
-    $('reviewText').value = '';
-    selectedStars = 0;
-    document.querySelectorAll('#starPicker .star').forEach(b=>b.classList.remove('active'));
+    $('btnPublishReview').disabled = true;
+    $('reviewMsg').textContent = 'Enviando...';
+    $('reviewMsg').style.color = 'var(--ink-soft)';
+    const r = await llamarBackend({ action: 'enviarResena', nombre: nombreCliente, estrellas: selectedStars, comentario: texto || '(sin comentario)' });
+    $('btnPublishReview').disabled = false;
+    if(r.ok){
+      $('reviewMsg').textContent = 'Gracias, tu comentario quedó enviado. Se publicará aquí una vez Trinomio lo revise.';
+      $('reviewMsg').style.color = 'var(--green)';
+      $('reviewText').value = '';
+      selectedStars = 0;
+      document.querySelectorAll('#starPicker .star').forEach(b=>b.classList.remove('active'));
+    } else {
+      $('reviewMsg').textContent = `No se pudo enviar: ${r.error || 'intenta de nuevo'}`;
+      $('reviewMsg').style.color = 'var(--brick)';
+    }
   });
 
   // ---- desbloqueo PRO ----
