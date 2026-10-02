@@ -41,11 +41,22 @@
   .github-float{ background:#1C2620; }
 
   nav.site{ position:sticky; top:0; z-index:40; background:rgba(255,255,255,.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--rule); }
-  nav.site .wrap{ display:flex; align-items:center; justify-content:space-between; padding-top:8px; padding-bottom:8px; }
+  nav.site .wrap{ position:relative; display:flex; align-items:center; justify-content:space-between; padding-top:8px; padding-bottom:8px; }
   nav.site .links{ display:flex; gap:32px; font-size:.92rem; font-weight:600; color:var(--ink-soft); }
   nav.site .links a.active{ color:var(--green); }
   nav.site .links a:hover{ color:var(--green); }
-  @media (max-width:760px){ nav.site .links{ display:none; } }
+  .nav-toggle{ display:none; background:none; border:none; font-size:1.7rem; line-height:1; color:var(--ink); cursor:pointer; padding:4px 6px; }
+  @media (max-width:760px){
+    .nav-toggle{ display:block; }
+    nav.site .links{
+      display:none; position:absolute; top:100%; left:0; right:0;
+      flex-direction:column; gap:0; background:#fff; border-bottom:1px solid var(--rule);
+      box-shadow:0 8px 16px rgba(0,0,0,.06);
+    }
+    nav.site .links.open{ display:flex; }
+    nav.site .links a{ padding:16px 24px; border-bottom:1px solid var(--rule); }
+    nav.site .links a:last-child{ border-bottom:none; }
+  }
 
   header.page-hero{
     text-align:center; padding: clamp(56px,8vw,90px) 0 clamp(44px,6vw,64px);
@@ -106,7 +117,8 @@
 <nav class="site">
   <div class="wrap">
     <a href="index.html"><img src="assets/logo%20empresa%20tri.png" alt="Trinomio SAS" style="height:104px; display:block;"></a>
-    <div class="links">
+    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">☰</button>
+    <div class="links" id="navLinks">
       <a href="index.html">Home</a>
       <a href="about.html">Sobre nosotros</a>
       <a class="active" href="servicios.html">Servicios</a>
@@ -220,5 +232,15 @@
   <div class="bottom">© Trinomio SAS · Colombia</div>
 </footer>
 
+<script>
+  (function(){
+    const btn = document.getElementById("navToggle");
+    const links = document.getElementById("navLinks");
+    if(btn && links){
+      btn.addEventListener("click", ()=> links.classList.toggle("open"));
+      links.querySelectorAll("a").forEach(a => a.addEventListener("click", ()=> links.classList.remove("open")));
+    }
+  })();
+</script>
 </body>
 </html>
