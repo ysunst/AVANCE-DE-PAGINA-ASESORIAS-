@@ -1,246 +1,460 @@
 <!DOCTYPE html>
-<html lang="es-CO">
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trinomio SAS | Resolvemos lo que te toma tiempo resolver</title>
-  <meta name="description" content="Conocimiento especializado, herramientas prácticas y formación aplicada en contabilidad, tributaria, laboral, finanzas y gerencia estratégica de costos para empresas, contadores y estudiantes en Colombia.">
-  <link rel="canonical" href="https://ysunst.github.io/AVANCE-DE-PAGINA-ASESORIAS-/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trinomio SAS | Resolvemos lo que te toma tiempo resolver</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#179132; --teal:#1e7b97; --cyan:#1FA9D6;
+    --ink:#0F2A2E; --ink-soft:#4E6A6E;
+    --paper:#F3F8F9; --paper-raised:#FFFFFF;
+    --rule:#D9E6E8; --rule-strong:#BFD3D6;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;
+    padding-top:env(safe-area-inset-top,0px);
+  }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; font-weight:700; margin:0; color:var(--ink); }
+  p{ margin:0; }
+  a{ color:inherit; text-decoration:none; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 clamp(20px,5vw,64px); }
+  .justify{ text-align:justify; text-justify:inter-word; }
+  .center{ text-align:center; margin-left:auto; margin-right:auto; }
+  .eyebrow{
+    font-size:.78rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--teal);
+  }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:.95rem;
+    padding:13px 26px; border-radius:3px; cursor:pointer; border:none;
+  }
+  .btn-primary{ background:var(--green); color:#fff; }
+  .btn-primary:hover{ filter:brightness(1.07); }
+  .btn-ghost{ background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,.65); }
+  .btn-ghost:hover{ border-color:#fff; }
+  .btn-outline{ background:transparent; color:var(--teal); border:1.5px solid var(--rule-strong); }
+  .btn-outline:hover{ border-color:var(--teal); }
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  /* ---- nav ---- */
+  nav.site{
+    position:sticky; top:0; z-index:40;
+    background:rgba(255,255,255,.92); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--rule);
+  }
+  nav.site .wrap{ display:flex; align-items:center; justify-content:space-between; padding-top:16px; padding-bottom:16px; }
+  nav.site .brand{ font-family:'Poppins',sans-serif; font-weight:800; font-size:1.15rem; color:var(--ink); }
+  nav.site .links{ display:flex; gap:32px; font-size:.92rem; font-weight:600; color:var(--ink-soft); }
+  nav.site .links a:hover{ color:var(--green); }
+  @media (max-width:760px){ nav.site .links{ display:none; } }
 
-  <link rel="stylesheet" href="./styles/style.css">
+  /* ---- hero ---- */
+  header.hero{
+    position:relative; overflow:hidden;
+    background:
+      radial-gradient(900px 500px at 15% -10%, rgba(255,255,255,.14), transparent 60%),
+      linear-gradient(135deg, var(--green) 0%, var(--teal) 100%);
+    padding: clamp(60px,9vw,110px) 0 clamp(70px,10vw,120px);
+    text-align:center;
+  }
+  header.hero .formula{
+    color:rgba(255,255,255,.85); font-size:.95rem; font-weight:600; margin-bottom:22px;
+    letter-spacing:.02em;
+  }
+  header.hero h1{
+    color:#fff; font-size:clamp(2.4rem,5.4vw,4rem); line-height:1.1; letter-spacing:-.015em;
+    max-width:920px; margin:0 auto;
+  }
+  header.hero h1 em{
+    font-family:'Source Serif 4',serif; font-style:italic; font-weight:400;
+    color:#D9F2E3;
+  }
+  header.hero p.lead{
+    color:rgba(255,255,255,.92); font-size:1.15rem; line-height:1.6;
+    max-width:640px; margin:26px auto 0;
+  }
+  header.hero .ctas{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:38px; }
+
+  /* ---- próximamente banner: carrusel ---- */
+  section.proximamente{ padding: clamp(50px,7vw,80px) 0; }
+  section.proximamente .head{ max-width:640px; margin:0 auto 40px; text-align:center; }
+  section.proximamente .head h2{ font-size:clamp(1.6rem,3vw,2.1rem); margin-top:8px; }
+  .carousel{ position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--rule-strong); }
+  .carousel .track{ display:flex; transition:transform .5s ease; }
+  .carousel .slide{ flex:0 0 100%; display:grid; grid-template-columns:1fr 1fr; min-height:320px; }
+  @media (max-width:760px){ .carousel .slide{ grid-template-columns:1fr; min-height:auto; } }
+  .carousel .thumb{
+    background:
+      repeating-linear-gradient(135deg, #EEF4F3, #EEF4F3 10px, #E6EEEC 10px, #E6EEEC 20px);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink-soft); font-size:.85rem; font-weight:600; text-align:center; padding:20px;
+  }
+  .carousel .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .carousel .info{ padding:40px 44px; display:flex; flex-direction:column; justify-content:center; background:var(--paper-raised); }
+  .carousel .tag{
+    display:inline-block; font-size:.74rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--cyan); margin-bottom:10px;
+  }
+  .carousel .info h3{ font-size:1.4rem; margin-bottom:12px; }
+  .carousel .info p{ font-size:.96rem; color:var(--ink-soft); line-height:1.6; }
+  .carousel .car-btn{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:40px; height:40px; border-radius:50%; border:1px solid var(--rule-strong);
+    background:rgba(255,255,255,.9); color:var(--ink); font-size:1.1rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .carousel .car-btn:hover{ background:#fff; }
+  .carousel .car-btn.prev{ left:16px; } .carousel .car-btn.next{ right:16px; }
+  .carousel .dots{ display:flex; gap:8px; justify-content:center; margin-top:18px; }
+  .carousel .dots button{
+    width:9px; height:9px; border-radius:50%; border:none; background:var(--rule-strong); cursor:pointer; padding:0;
+  }
+  .carousel .dots button.active{ background:var(--green); }
+
+  /* ---- elige tu camino ---- */
+  section.caminos{ padding: clamp(50px,7vw,90px) 0; background:var(--paper-raised); border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); }
+  section.caminos .head{ max-width:680px; margin:0 auto 46px; text-align:center; }
+  section.caminos .head .eyebrow{ display:block; margin-bottom:10px; }
+  section.caminos .head h2{ font-size:clamp(1.7rem,3.2vw,2.3rem); margin-bottom:14px; }
+  section.caminos .head p{ color:var(--ink-soft); font-size:1.03rem; line-height:1.6; }
+  .camino-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:0; border:1px solid var(--rule-strong); border-radius:8px; overflow:hidden; }
+  @media (max-width:860px){ .camino-grid{ grid-template-columns:1fr; } }
+  .camino{
+    padding:38px 32px; border-right:1px solid var(--rule); text-align:center;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .camino:last-child{ border-right:none; }
+  @media (max-width:860px){ .camino{ border-right:none; border-bottom:1px solid var(--rule); } .camino:last-child{ border-bottom:none; } }
+  .camino .icon{
+    width:52px; height:52px; border-radius:50%; background:var(--paper);
+    display:flex; align-items:center; justify-content:center; margin-bottom:18px;
+    border:1px solid var(--rule-strong);
+  }
+  .camino h3{ font-size:1.2rem; margin-bottom:10px; }
+  .camino .q{ color:var(--teal); font-size:.95rem; font-weight:600; margin-bottom:16px; line-height:1.45; }
+  .camino ul{ list-style:none; padding:0; margin:0 0 22px; text-align:left; width:100%; }
+  .camino li{
+    font-size:.88rem; color:var(--ink-soft); padding:7px 0 7px 22px; position:relative; line-height:1.4;
+    border-bottom:1px solid var(--rule);
+  }
+  .camino li:last-child{ border-bottom:none; }
+  .camino li::before{ content:"—"; position:absolute; left:0; color:var(--green); }
+  .camino .btn{ margin-top:auto; }
+
+  /* ---- qué hacemos ---- */
+  section.hacemos{ padding: clamp(50px,7vw,90px) 0; }
+  section.hacemos .head{ max-width:680px; margin:0 auto 40px; text-align:center; }
+  section.hacemos .head h2{ font-size:clamp(1.7rem,3.2vw,2.3rem); margin-bottom:14px; }
+  section.hacemos .head p{ color:var(--ink-soft); font-size:1.02rem; line-height:1.65; }
+  .hacemos-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--rule); border:1px solid var(--rule); }
+  @media (max-width:860px){ .hacemos-grid{ grid-template-columns:1fr; } }
+  .hacemos-item{ background:var(--paper-raised); padding:30px 28px; }
+  .hacemos-item h3{ font-size:1.05rem; margin-bottom:8px; color:var(--teal); }
+  .hacemos-item p{ font-size:.9rem; color:var(--ink-soft); line-height:1.55; }
+  .especialidades{
+    display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:34px;
+  }
+  .especialidades span{
+    font-size:.82rem; font-weight:600; color:var(--ink);
+    border:1px solid var(--rule-strong); border-radius:20px; padding:7px 16px;
+    background:var(--paper-raised);
+  }
+
+  /* ---- cómo trabajamos ---- */
+  section.proceso{ padding: clamp(50px,7vw,90px) 0; background:var(--paper-raised); border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); }
+  section.proceso .head{ max-width:680px; margin:0 auto 50px; text-align:center; }
+  section.proceso .head h2{ font-size:clamp(1.7rem,3.2vw,2.3rem); margin-bottom:14px; }
+  section.proceso .head p{ color:var(--ink-soft); font-size:1.02rem; line-height:1.65; }
+  .pasos{ display:grid; grid-template-columns:repeat(6,1fr); gap:18px; position:relative; }
+  @media (max-width:980px){ .pasos{ grid-template-columns:repeat(3,1fr); } }
+  @media (max-width:560px){ .pasos{ grid-template-columns:1fr; } }
+  .paso{ text-align:center; }
+  .paso .n{
+    width:40px; height:40px; border-radius:50%; margin:0 auto 14px;
+    background:var(--green); color:#fff; font-family:'Poppins',sans-serif; font-weight:700;
+    display:flex; align-items:center; justify-content:center; font-size:1rem;
+  }
+  .paso h3{ font-size:.98rem; margin-bottom:6px; }
+  .paso p{ font-size:.84rem; color:var(--ink-soft); line-height:1.5; }
+
+  /* ---- caso aplicado ---- */
+  section.caso{ padding: clamp(50px,7vw,90px) 0; }
+  .caso-box{
+    display:flex; align-items:center; justify-content:space-between; gap:40px; flex-wrap:wrap;
+    background:linear-gradient(120deg, var(--green) 0%, var(--teal) 100%);
+    border-radius:10px; padding:46px 50px; color:#fff;
+  }
+  .caso-box .eyebrow{ color:rgba(255,255,255,.85); }
+  .caso-box h2{ color:#fff; font-size:clamp(1.5rem,2.8vw,2rem); margin-top:10px; max-width:520px; }
+  .caso-box .btn{ flex-shrink:0; }
+
+  /* ---- confianza ---- */
+  section.confianza{ padding: clamp(50px,7vw,90px) 0; }
+  .confianza-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:30px; text-align:center; }
+  @media (max-width:760px){ .confianza-grid{ grid-template-columns:repeat(2,1fr); } }
+  .confianza-grid h3{ font-size:1.05rem; margin-bottom:8px; color:var(--teal); }
+  .confianza-grid p{ font-size:.88rem; color:var(--ink-soft); line-height:1.55; }
+
+  /* ---- CTA final ---- */
+  section.cta-final{
+    padding: clamp(60px,8vw,100px) 0; text-align:center;
+    background: var(--ink); color:#fff;
+  }
+  section.cta-final h2{ color:#fff; font-size:clamp(1.8rem,3.4vw,2.5rem); max-width:640px; margin:0 auto 18px; }
+  section.cta-final p{ color:rgba(255,255,255,.75); max-width:560px; margin:0 auto 32px; font-size:1.02rem; line-height:1.6; }
+  section.cta-final .ctas{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+  section.cta-final .tagline{ margin-top:50px; color:rgba(255,255,255,.5); font-size:.85rem; letter-spacing:.08em; text-transform:uppercase; }
+
+  /* ---- footer ---- */
+  footer.site{ background:#0A1F22; color:rgba(255,255,255,.65); padding:44px 0 28px; }
+  footer.site .wrap{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px; }
+  footer.site strong{ color:#fff; font-family:'Poppins',sans-serif; }
+  footer.site a:hover{ color:#fff; }
+  footer.site .bottom{ margin-top:30px; padding-top:20px; border-top:1px solid rgba(255,255,255,.12); font-size:.8rem; text-align:center; color:rgba(255,255,255,.45); }
+</style>
 </head>
 <body>
 
-  <header class="header">
-    <div class="contenedor header__barra">
-      <a class="header__marca" href="index.html">Trinomio SAS</a>
-      <button class="header__toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="headerMenu">☰</button>
-      <nav class="header__menu" id="headerMenu" aria-label="Principal">
-        <a class="header__menu__link" href="index.html" aria-current="page">Home</a>
-        <a class="header__menu__link" href="about.html">Sobre nosotros</a>
-        <a class="header__menu__link" href="servicios.html">Servicios</a>
-        <a class="header__menu__link" href="noticias.html">Noticias</a>
-      </nav>
+<nav class="site">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="assets/logo%20empresa%20tri.png" alt="Trinomio SAS" style="height:42px; display:block;"></a>
+    <div class="links">
+      <a href="index.html">Home</a>
+      <a href="about.html">Sobre nosotros</a>
+      <a href="servicios.html">Servicios</a>
+      <a href="noticias.html">Noticias</a>
     </div>
-  </header>
-
-  <main>
-
-    <!-- 1. Qué es Trinomio, para quién y qué hacer aquí -->
-    <section class="hero">
-      <div class="contenedor">
-        <p class="formula" aria-label="Especialistas más conocimiento académico y normativo más tecnología es igual a Trinomio">
-          <span>Especialistas</span>
-          <span class="formula__op" aria-hidden="true">+</span>
-          <span>Conocimiento académico y normativo</span>
-          <span class="formula__op" aria-hidden="true">+</span>
-          <span>Tecnología</span>
-          <span class="formula__op" aria-hidden="true">=</span>
-          <span class="formula__resultado">Trinomio</span>
-        </p>
-
-        <h1>Resolvemos lo que te toma tiempo resolver.</h1>
-
-        <p class="hero__texto">
-          Conocimiento especializado, herramientas prácticas y formación aplicada
-          para empresas, contadores públicos, estudiantes y profesionales en Colombia.
-        </p>
-
-        <div class="grupo-botones">
-          <a class="btn btn--principal" href="servicios.html">Explorar herramientas</a>
-          <a class="btn btn--claro" href="#empresa">Soy empresa</a>
-          <a class="btn btn--claro" href="#estudiante">Soy estudiante</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- 2. Elige tu camino -->
-    <section class="seccion" aria-labelledby="titulo-caminos">
-      <div class="contenedor">
-        <div class="seccion__intro">
-          <h2 id="titulo-caminos">Elige tu camino</h2>
-          <p>Cada quien llega con un problema distinto. Te respondemos con la misma base de conocimiento, adaptada a lo que necesitas.</p>
-        </div>
-
-        <div class="caminos">
-          <article class="camino" id="empresa">
-            <h3>Soy empresa</h3>
-            <p class="camino__problema">¿Sabe cuánto le cuesta realmente cada producto, servicio o proceso?</p>
-            <ul>
-              <li>Modelos de costeo y rentabilidad</li>
-              <li>Políticas y procedimientos contables</li>
-              <li>Tableros de indicadores</li>
-              <li>Consultoría e implementación en ERP</li>
-            </ul>
-            <a class="btn btn--principal" target="_blank" rel="noopener"
-               href="https://wa.me/573219246512?text=Hola%20Trinomio,%20represento%20una%20empresa%20y%20quiero%20informacion%20sobre%20costos%20y%20consultoria">
-              Hablar con un especialista
-            </a>
-          </article>
-
-          <article class="camino camino--contador" id="contador">
-            <h3>Soy contador o profesional</h3>
-            <p class="camino__problema">Deja de rehacer el mismo cálculo cada mes.</p>
-            <ul>
-              <li>Calculadoras laborales y tributarias</li>
-              <li>Papeles de trabajo y plantillas</li>
-              <li>Guías normativas actualizadas</li>
-              <li>Automatización de tareas repetitivas</li>
-            </ul>
-            <a class="btn btn--contorno" href="servicios.html">Ver herramientas</a>
-          </article>
-
-          <article class="camino camino--estudiante" id="estudiante">
-            <h3>Soy estudiante</h3>
-            <p class="camino__problema">Lo que ves en clase, aplicado a empresas reales.</p>
-            <ul>
-              <li>Casos reales anonimizados</li>
-              <li>Plantillas guiadas</li>
-              <li>Talleres y rutas de aprendizaje</li>
-            </ul>
-            <a class="btn btn--contorno" target="_blank" rel="noopener"
-               href="https://wa.me/573219246512?text=Hola%20Trinomio,%20soy%20estudiante%20y%20quiero%20informacion%20sobre%20talleres%20y%20casos%20practicos">
-              Preguntar por talleres
-            </a>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3. Qué hacemos -->
-    <section class="seccion seccion--menta" aria-labelledby="titulo-hacemos">
-      <div class="contenedor">
-        <div class="seccion__intro">
-          <h2 id="titulo-hacemos">Qué hacemos</h2>
-          <p>Enseñar, asesorar, crear formatos y automatizar, las cuatro cosas sobre casos reales y con la trazabilidad que exigen un revisor fiscal, la DIAN y una junta directiva.</p>
-        </div>
-
-        <dl class="oferta">
-          <div class="oferta__item"><dt>Calculadoras y herramientas</dt><dd>Resuelve, calcula y analiza en minutos, con la norma aplicada.</dd></div>
-          <div class="oferta__item"><dt>Plantillas y formatos</dt><dd>Estructura tu información y trabaja con orden.</dd></div>
-          <div class="oferta__item"><dt>Guías y conocimiento</dt><dd>Conoce la norma, entiende el proceso y aplícalo bien.</dd></div>
-          <div class="oferta__item"><dt>Formación aplicada</dt><dd>Talleres, casos y rutas de aprendizaje.</dd></div>
-          <div class="oferta__item"><dt>Automatización</dt><dd>La tecnología al servicio del profesional.</dd></div>
-          <div class="oferta__item"><dt>Consultoría especializada</dt><dd>Criterio experto para problemas que no caben en una plantilla.</dd></div>
-        </dl>
-
-        <ul class="especialidades" aria-label="Especialidades">
-          <li>Contable</li>
-          <li>Tributaria</li>
-          <li>Laboral</li>
-          <li>Financiera</li>
-          <li class="insignia">Gerencia estratégica de costos</li>
-          <li>Consultoría empresarial</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- 4. Metodología: la razón para confiar -->
-    <section class="seccion" aria-labelledby="titulo-metodo">
-      <div class="contenedor">
-        <div class="seccion__intro">
-          <h2 id="titulo-metodo">Cómo trabajamos</h2>
-          <p>Toda solución sigue los mismos seis pasos, para que el resultado siempre se pueda explicar y verificar.</p>
-        </div>
-
-        <ol class="pasos">
-          <li><h3>Entender</h3><p>Qué te toma tiempo, dónde hay riesgo de error y qué decisión depende de ese proceso.</p></li>
-          <li><h3>Fundamentar</h3><p>Revisamos la norma contable, tributaria o laboral aplicable.</p></li>
-          <li><h3>Modelar</h3><p>Diseñamos la lógica del cálculo con supuestos documentados.</p></li>
-          <li><h3>Construir</h3><p>Calculadora, plantilla, procedimiento, automatización o parametrización en ERP.</p></li>
-          <li><h3>Validar</h3><p>Probamos con datos reales y dejamos evidencia.</p></li>
-          <li><h3>Transferir</h3><p>Entregamos guía de uso, capacitamos y medimos el resultado.</p></li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- 5. Caso: solo un enlace; el detalle vive en caso-costeo-abc.html
-         IMPORTANTE: confirmar la autorización de la empresa antes de publicar. -->
-    <section class="seccion seccion--menta" aria-labelledby="titulo-caso">
-      <div class="contenedor caso-enlace">
-        <div>
-          <span class="caso__etiqueta">Caso aplicado · Gerencia estratégica de costos</span>
-          <h2 id="titulo-caso">¿Cuánto vale un equipo que vuelve a operar?</h2>
-          <p>Conoce cómo determinamos el valor de recuperación de equipos reacondicionados con el método de costeo ABC.</p>
-        </div>
-        <a class="btn btn--principal" href="caso-costeo-abc.html">Ver el caso</a>
-      </div>
-    </section>
-
-    <!-- 6. Compromisos -->
-    <section class="seccion" aria-labelledby="titulo-confianza">
-      <div class="contenedor">
-        <div class="seccion__intro">
-          <h2 id="titulo-confianza">Lo que puedes esperar de nosotros</h2>
-        </div>
-        <div class="confianza">
-          <div><h3>Rigor</h3><p>Cada herramienta se sustenta en norma, metodología y evidencia.</p></div>
-          <div><h3>Trazabilidad</h3><p>Todo resultado se puede verificar y auditar.</p></div>
-          <div><h3>Claridad</h3><p>Explicamos lo complejo en lenguaje aplicable.</p></div>
-          <div><h3>Confidencialidad</h3><p>Protegemos la información de cada cliente y publicamos los casos anonimizados.</p></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7. Cierre -->
-    <section class="cierre">
-      <div class="contenedor">
-        <h2>¿Cuánto tiempo te toma resolverlo?</h2>
-        <p>En Trinomio lo convertimos en una herramienta. Cuéntanos qué proceso te está quitando tiempo.</p>
-        <div class="grupo-botones">
-          <a class="btn btn--claro" target="_blank" rel="noopener"
-             href="https://wa.me/573219246512?text=Hola%20Trinomio,%20quiero%20contarles%20un%20proceso%20que%20me%20toma%20tiempo%20resolver">
-            Escribir por WhatsApp
-          </a>
-          <a class="btn btn--claro" href="servicios.html">Explorar la plataforma</a>
-        </div>
-        <p class="firma">Calcula. Consulta. Aprende. Automatiza. Decide.</p>
-      </div>
-    </section>
-
-  </main>
-
-  <footer class="footer">
-    <div class="contenedor">
-      <div class="footer__fila">
-        <div>
-          <strong>Trinomio SAS</strong>
-          Confianza en sus números. Conocimiento para decidir. Proyección para crecer.
-        </div>
-        <div>
-          <strong>Contacto</strong>
-          <a href="https://wa.me/573219246512" target="_blank" rel="noopener">WhatsApp +57 321 924 6512</a><br>
-          <a href="https://www.instagram.com/servicios_contables._/?hl=es" target="_blank" rel="noopener">Instagram</a>
-        </div>
-      </div>
-      <p class="footer__legal">© <span id="anio"></span> Trinomio SAS · Colombia</p>
-    </div>
-  </footer>
-
-  <div class="floating-buttons">
-    <a href="https://wa.me/573219246512?text=Hola%20Trinomio,%20necesito%20informacion%20sobre%20sus%20servicios"
-       target="_blank" rel="noopener" class="social-float whatsapp-float" data-tooltip="Escríbenos por WhatsApp" aria-label="Contactar por WhatsApp" title="WhatsApp">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.893 3.106"/></svg>
-    </a>
-    <a href="https://www.instagram.com/servicios_contables._/?hl=es"
-       target="_blank" rel="noopener" class="social-float instagram-float" data-tooltip="Síguenos en Instagram" aria-label="Síguenos en Instagram" title="Instagram">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-    </a>
   </div>
+</nav>
 
-  <script>
-    const menuToggle = document.getElementById('menuToggle');
-    const headerMenu = document.getElementById('headerMenu');
-    if (menuToggle && headerMenu) {
-      menuToggle.addEventListener('click', () => {
-        const abierto = headerMenu.classList.toggle('header__menu--open');
-        menuToggle.setAttribute('aria-expanded', abierto);
-      });
-    }
-    document.getElementById('anio').textContent = new Date().getFullYear();
-  </script>
+<header class="hero">
+  <div class="wrap">
+    <div class="formula">Especialistas + Conocimiento académico y normativo + Tecnología = Trinomio</div>
+    <h1>Resolvemos lo que <em>te toma tiempo</em> resolver.</h1>
+    <p class="lead">Conocimiento especializado, herramientas prácticas y formación aplicada para empresas, contadores públicos, estudiantes y profesionales en Colombia.</p>
+    <div class="ctas">
+      <a class="btn btn-primary" href="servicios.html">Explorar herramientas</a>
+      <a class="btn btn-ghost" href="#empresa">Soy empresa</a>
+      <a class="btn btn-ghost" href="#estudiante">Soy estudiante</a>
+    </div>
+  </div>
+</header>
+
+<section class="proximamente">
+  <div class="wrap">
+    <div class="head">
+      <div class="eyebrow">Próximamente</div>
+      <h2>Lo que estamos construyendo</h2>
+      <p class="justify" style="color:var(--ink-soft); margin-top:12px;">Seguimos ampliando la plataforma. Aquí vas a ver, muy pronto, capturas reales de cada herramienta nueva apenas quede lista.</p>
+    </div>
+    <div class="carousel" id="proxCarousel">
+      <div class="track" id="proxTrack">
+        <div class="slide">
+          <div class="thumb">Espacio para captura<br>— próximamente —</div>
+          <div class="info">
+            <span class="tag">Nueva calculadora</span>
+            <h3>Indemnizaciones</h3>
+            <p>Cálculo de indemnización por despido sin justa causa, paso a paso, con la norma aplicada.</p>
+          </div>
+        </div>
+        <div class="slide">
+          <div class="thumb">Espacio para captura<br>— próximamente —</div>
+          <div class="info">
+            <span class="tag">Panel de clientes</span>
+            <h3>Mis liquidaciones</h3>
+            <p>Historial de documentos generados, con descarga directa desde tu cuenta.</p>
+          </div>
+        </div>
+        <div class="slide">
+          <div class="thumb">Espacio para captura<br>— próximamente —</div>
+          <div class="info">
+            <span class="tag">Automatización</span>
+            <h3>Reportes mensuales</h3>
+            <p>Indicadores de costos y nómina generados automáticamente cada mes.</p>
+          </div>
+        </div>
+      </div>
+      <button class="car-btn prev" aria-label="Anterior">‹</button>
+      <button class="car-btn next" aria-label="Siguiente">›</button>
+    </div>
+    <div class="dots" id="proxDots"></div>
+  </div>
+</section>
+
+<section class="caminos" id="empresa">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Elige tu camino</span>
+      <h2>Cada quien llega con un problema distinto</h2>
+      <p class="justify">Te respondemos con la misma base de conocimiento, adaptada a lo que necesitas — sin que tengas que explicar dos veces tu situación.</p>
+    </div>
+    <div class="camino-grid">
+      <div class="camino">
+        <div class="icon">🏢</div>
+        <h3>Soy empresa</h3>
+        <div class="q">¿Sabe cuánto le cuesta realmente cada producto, servicio o proceso?</div>
+        <ul>
+          <li>Modelos de costeo y rentabilidad</li>
+          <li>Políticas y procedimientos contables</li>
+          <li>Tableros de indicadores</li>
+          <li>Consultoría e implementación en ERP</li>
+        </ul>
+        <a class="btn btn-outline" href="https://wa.me/573219246512?text=Hola%20Trinomio,%20represento%20una%20empresa%20y%20quiero%20informacion%20sobre%20costos%20y%20consultoria">Hablar con un especialista</a>
+      </div>
+      <div class="camino">
+        <div class="icon">📊</div>
+        <h3>Soy contador o profesional</h3>
+        <div class="q">Deja de rehacer el mismo cálculo cada mes.</div>
+        <ul>
+          <li>Calculadoras laborales y tributarias</li>
+          <li>Papeles de trabajo y plantillas</li>
+          <li>Guías normativas actualizadas</li>
+          <li>Automatización de tareas repetitivas</li>
+        </ul>
+        <a class="btn btn-outline" href="servicios.html">Ver herramientas</a>
+      </div>
+      <div class="camino" id="estudiante">
+        <div class="icon">🎓</div>
+        <h3>Soy estudiante</h3>
+        <div class="q">Lo que ves en clase, aplicado a empresas reales.</div>
+        <ul>
+          <li>Casos reales anonimizados</li>
+          <li>Plantillas guiadas</li>
+          <li>Talleres y rutas de aprendizaje</li>
+        </ul>
+        <a class="btn btn-outline" href="https://wa.me/573219246512?text=Hola%20Trinomio,%20soy%20estudiante%20y%20quiero%20informacion%20sobre%20talleres%20y%20casos%20practicos">Preguntar por talleres</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="hacemos">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Qué hacemos</span>
+      <h2 style="margin-top:10px;">Enseñar, asesorar, crear formatos y automatizar</h2>
+      <p class="justify" style="margin-top:12px;">Las cuatro cosas sobre casos reales, con la trazabilidad que exigen un revisor fiscal, la DIAN y una junta directiva.</p>
+    </div>
+    <div class="hacemos-grid">
+      <div class="hacemos-item"><h3>Calculadoras y herramientas</h3><p>Resuelve, calcula y analiza en minutos, con la norma aplicada.</p></div>
+      <div class="hacemos-item"><h3>Plantillas y formatos</h3><p>Estructura tu información y trabaja con orden.</p></div>
+      <div class="hacemos-item"><h3>Guías y conocimiento</h3><p>Conoce la norma, entiende el proceso y aplícalo bien.</p></div>
+      <div class="hacemos-item"><h3>Formación aplicada</h3><p>Talleres, casos y rutas de aprendizaje.</p></div>
+      <div class="hacemos-item"><h3>Automatización</h3><p>La tecnología al servicio del profesional.</p></div>
+      <div class="hacemos-item"><h3>Consultoría especializada</h3><p>Criterio experto para problemas que no caben en una plantilla.</p></div>
+    </div>
+    <div class="especialidades">
+      <span>Contable</span><span>Tributaria</span><span>Laboral</span><span>Financiera</span><span>Gerencia estratégica de costos</span><span>Consultoría empresarial</span>
+    </div>
+  </div>
+</section>
+
+<section class="proceso">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Cómo trabajamos</span>
+      <h2 style="margin-top:10px;">Seis pasos, siempre los mismos</h2>
+      <p class="justify" style="margin-top:12px;">Para que el resultado siempre se pueda explicar y verificar, sin atajos ni cajas negras.</p>
+    </div>
+    <div class="pasos">
+      <div class="paso"><div class="n">1</div><h3>Entender</h3><p>Qué te toma tiempo, dónde hay riesgo de error y qué decisión depende de ese proceso.</p></div>
+      <div class="paso"><div class="n">2</div><h3>Fundamentar</h3><p>Revisamos la norma contable, tributaria o laboral aplicable.</p></div>
+      <div class="paso"><div class="n">3</div><h3>Modelar</h3><p>Diseñamos la lógica del cálculo con supuestos documentados.</p></div>
+      <div class="paso"><div class="n">4</div><h3>Construir</h3><p>Calculadora, plantilla, procedimiento o automatización.</p></div>
+      <div class="paso"><div class="n">5</div><h3>Validar</h3><p>Probamos con datos reales y dejamos evidencia.</p></div>
+      <div class="paso"><div class="n">6</div><h3>Transferir</h3><p>Entregamos guía de uso, capacitamos y medimos el resultado.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="caso">
+  <div class="wrap">
+    <div class="caso-box">
+      <div>
+        <span class="eyebrow">Caso aplicado · Gerencia estratégica de costos</span>
+        <h2>¿Cuánto vale un equipo que vuelve a operar?</h2>
+      </div>
+      <a class="btn btn-ghost" href="caso-costeo-abc.html">Ver el caso →</a>
+    </div>
+  </div>
+</section>
+
+<section class="confianza">
+  <div class="wrap">
+    <div class="head center" style="max-width:640px; margin-bottom:40px;">
+      <span class="eyebrow">Lo que puedes esperar de nosotros</span>
+    </div>
+    <div class="confianza-grid">
+      <div><h3>Rigor</h3><p>Cada herramienta se sustenta en norma, metodología y evidencia.</p></div>
+      <div><h3>Trazabilidad</h3><p>Todo resultado se puede verificar y auditar.</p></div>
+      <div><h3>Claridad</h3><p>Explicamos lo complejo en lenguaje aplicable.</p></div>
+      <div><h3>Confidencialidad</h3><p>Protegemos la información de cada cliente y publicamos los casos anonimizados.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-final">
+  <div class="wrap">
+    <h2>¿Cuánto tiempo te toma resolverlo?</h2>
+    <p>En Trinomio lo convertimos en una herramienta. Cuéntanos qué proceso te está quitando tiempo.</p>
+    <div class="ctas">
+      <a class="btn btn-primary" href="https://wa.me/573219246512?text=Hola%20Trinomio,%20quiero%20contarles%20un%20proceso%20que%20me%20toma%20tiempo%20resolver">Escribir por WhatsApp</a>
+      <a class="btn btn-ghost" href="servicios.html">Explorar la plataforma</a>
+    </div>
+    <div class="tagline">Calcula · Consulta · Aprende · Automatiza · Decide</div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <div style="max-width:320px;">
+      <strong>Trinomio SAS</strong>
+      <p style="margin-top:10px; font-size:.88rem; line-height:1.6;">Confianza en sus números. Conocimiento para decidir. Proyección para crecer.</p>
+    </div>
+    <div>
+      <strong style="display:block; margin-bottom:10px; font-size:.9rem;">Contacto</strong>
+      <a href="https://wa.me/573219246512" style="display:block; font-size:.88rem; margin-bottom:6px;">WhatsApp +57 321 924 6512</a>
+      <a href="https://www.instagram.com/servicios_contables._/?hl=es" style="display:block; font-size:.88rem;">Instagram</a>
+    </div>
+  </div>
+  <div class="bottom">© Trinomio SAS · Colombia</div>
+</footer>
+
+<script>
+(function(){
+  const track = document.getElementById('proxTrack');
+  const slides = track.children;
+  const dotsWrap = document.getElementById('proxDots');
+  const prevBtn = document.querySelector('#proxCarousel .prev');
+  const nextBtn = document.querySelector('#proxCarousel .next');
+  let i = 0, timer;
+
+  for(let k=0; k<slides.length; k++){
+    const d = document.createElement('button');
+    if(k===0) d.className = 'active';
+    d.addEventListener('click', ()=> go(k));
+    dotsWrap.appendChild(d);
+  }
+  function render(){
+    track.style.transform = `translateX(-${i*100}%)`;
+    Array.from(dotsWrap.children).forEach((d,k)=> d.classList.toggle('active', k===i));
+  }
+  function go(n){ i = (n + slides.length) % slides.length; render(); restart(); }
+  function restart(){ clearInterval(timer); timer = setInterval(()=> go(i+1), 4500); }
+  prevBtn.addEventListener('click', ()=> go(i-1));
+  nextBtn.addEventListener('click', ()=> go(i+1));
+  document.getElementById('proxCarousel').addEventListener('mouseenter', ()=> clearInterval(timer));
+  document.getElementById('proxCarousel').addEventListener('mouseleave', restart);
+  render();
+  restart();
+})();
+</script>
 </body>
 </html>

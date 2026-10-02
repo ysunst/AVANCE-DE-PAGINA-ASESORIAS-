@@ -1,284 +1,342 @@
 <!DOCTYPE html>
-<html lang="es-CO">
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sobre nosotros | Trinomio SAS</title>
-  <meta name="description" content="Trinomio SAS reúne especialistas, formación académica y tecnología para resolver necesidades contables, tributarias, laborales, financieras y de costos en Colombia.">
-  <link rel="canonical" href="https://ysunst.github.io/AVANCE-DE-PAGINA-ASESORIAS-/about.html">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sobre nosotros | Trinomio SAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#179132; --teal:#1e7b97; --cyan:#1FA9D6;
+    --ink:#0F2A2E; --ink-soft:#4E6A6E;
+    --paper:#F3F8F9; --paper-raised:#FFFFFF;
+    --rule:#D9E6E8; --rule-strong:#BFD3D6;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;
+    padding-top:env(safe-area-inset-top,0px);
+  }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; font-weight:700; margin:0; color:var(--ink); }
+  p{ margin:0; }
+  a{ color:inherit; text-decoration:none; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 clamp(20px,5vw,64px); }
+  .justify{ text-align:justify; text-justify:inter-word; }
+  .eyebrow{ font-size:.78rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--teal); }
+  .btn{ display:inline-flex; align-items:center; gap:8px; font-family:'Inter',sans-serif; font-weight:600; font-size:.95rem; padding:13px 26px; border-radius:3px; cursor:pointer; border:none; }
+  .btn-primary{ background:var(--green); color:#fff; }
+  .btn-primary:hover{ filter:brightness(1.07); }
+  .btn-ghost{ background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,.65); }
+  .btn-ghost:hover{ border-color:#fff; }
+  .btn-outline{ background:transparent; color:var(--teal); border:1.5px solid var(--rule-strong); }
+  .btn-outline:hover{ border-color:var(--teal); }
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  nav.site{ position:sticky; top:0; z-index:40; background:rgba(255,255,255,.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--rule); }
+  nav.site .wrap{ display:flex; align-items:center; justify-content:space-between; padding-top:16px; padding-bottom:16px; }
+  nav.site .links{ display:flex; gap:32px; font-size:.92rem; font-weight:600; color:var(--ink-soft); }
+  nav.site .links a.active{ color:var(--green); }
+  nav.site .links a:hover{ color:var(--green); }
+  @media (max-width:760px){ nav.site .links{ display:none; } }
 
-  <link rel="stylesheet" href="./styles/style.css">
+  header.page-hero{
+    text-align:center; padding: clamp(56px,8vw,90px) 0 clamp(44px,6vw,64px);
+    background: radial-gradient(900px 500px at 15% -10%, rgba(255,255,255,.14), transparent 60%), linear-gradient(135deg, var(--green) 0%, var(--teal) 100%);
+  }
+  header.page-hero .formula{ color:rgba(255,255,255,.85); font-size:.92rem; font-weight:600; margin-bottom:20px; }
+  header.page-hero h1{ color:#fff; font-size:clamp(2rem,4.4vw,3.1rem); line-height:1.18; max-width:820px; margin:0 auto; letter-spacing:-.01em; }
+  header.page-hero h1 em{ font-family:'Source Serif 4',serif; font-style:italic; font-weight:400; color:#D9F2E3; }
+
+  section.intro{ padding: clamp(50px,7vw,80px) 0; }
+  section.intro p{ max-width:700px; margin:0 auto; font-size:1.08rem; line-height:1.75; color:var(--ink-soft); }
+
+  section.tres-fuentes{ padding: clamp(50px,7vw,80px) 0; background:var(--paper-raised); border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); }
+  .head{ max-width:700px; margin:0 auto 40px; text-align:center; }
+  .head h2{ font-size:clamp(1.6rem,3vw,2.2rem); margin-bottom:14px; }
+  .head p{ color:var(--ink-soft); font-size:1.02rem; line-height:1.65; }
+  .pilares{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--rule); border:1px solid var(--rule); border-radius:8px; overflow:hidden; margin-top:36px; }
+  @media (max-width:760px){ .pilares{ grid-template-columns:1fr; } }
+  .pilar{ background:var(--paper-raised); padding:32px 28px; text-align:center; }
+  .pilar .n{
+    width:36px; height:36px; border-radius:50%; margin:0 auto 16px;
+    background:var(--green); color:#fff; font-family:'Poppins',sans-serif; font-weight:700;
+    display:flex; align-items:center; justify-content:center; font-size:.95rem;
+  }
+  .pilar h3{ font-size:1.05rem; margin-bottom:10px; }
+  .pilar p{ font-size:.88rem; color:var(--ink-soft); line-height:1.6; }
+  .pilares-nota{ max-width:640px; margin:24px auto 0; text-align:center; font-family:'Source Serif 4',serif; font-style:italic; color:var(--ink); font-size:1.02rem; line-height:1.5; }
+
+  section.mv{ padding: clamp(50px,7vw,80px) 0; }
+  .mv-grid{ display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--rule); border:1px solid var(--rule); border-radius:8px; overflow:hidden; }
+  @media (max-width:760px){ .mv-grid{ grid-template-columns:1fr; } }
+  .mv-card{ background:var(--paper-raised); padding:40px 44px; }
+  .mv-card .eyebrow{ display:block; margin-bottom:12px; }
+  .mv-card h2{ font-size:1.4rem; margin-bottom:16px; }
+  .mv-card p{ font-size:.96rem; line-height:1.75; color:var(--ink-soft); }
+  .mv-card p + p{ margin-top:14px; }
+
+  section.valores{ padding: clamp(50px,7vw,80px) 0; background:var(--paper-raised); border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); }
+  .valores-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:24px; margin-top:10px; }
+  @media (max-width:980px){ .valores-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:560px){ .valores-grid{ grid-template-columns:1fr; } }
+  .valor{ text-align:center; }
+  .valor h3{ font-size:1rem; color:var(--teal); margin-bottom:8px; }
+  .valor p{ font-size:.86rem; color:var(--ink-soft); line-height:1.55; }
+
+  section.publico{ padding: clamp(50px,7vw,80px) 0; }
+  .publico-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:22px; margin-top:10px; }
+  @media (max-width:860px){ .publico-grid{ grid-template-columns:1fr; } }
+  .publico-card{ border:1px solid var(--rule-strong); border-radius:8px; padding:26px 28px; background:var(--paper-raised); }
+  .publico-card h3{ font-size:1.05rem; margin-bottom:10px; }
+  .publico-card .label{ font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--cyan); margin-bottom:6px; display:block; }
+  .publico-card p{ font-size:.88rem; color:var(--ink-soft); line-height:1.6; margin-bottom:10px; }
+  .publico-card .frase{ font-family:'Source Serif 4',serif; font-style:italic; color:var(--ink); font-size:1rem; margin-top:14px; border-top:1px solid var(--rule); padding-top:14px; }
+
+  section.especialidad{ padding: clamp(50px,7vw,80px) 0; background:var(--paper-raised); border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); }
+  .especialidad-wrap{ max-width:780px; margin:0 auto; }
+  .especialidad-wrap > p{ font-size:1.02rem; line-height:1.75; color:var(--ink-soft); margin-bottom:26px; }
+  .especialidad-list{ list-style:none; padding:0; margin:0; }
+  .especialidad-list li{ padding:14px 0; border-bottom:1px solid var(--rule); font-size:.95rem; line-height:1.55; }
+  .especialidad-list li:last-child{ border-bottom:none; }
+  .especialidad-list strong{ color:var(--ink); }
+
+  /* ---- quién está detrás ---- */
+  section.equipo{ padding: clamp(56px,7vw,90px) 0; }
+  .equipo-wrap{
+    display:grid; grid-template-columns:300px 1fr; gap:48px; align-items:center;
+    border:1px solid var(--rule-strong); border-radius:12px; padding:44px; background:var(--paper-raised);
+  }
+  @media (max-width:760px){ .equipo-wrap{ grid-template-columns:1fr; text-align:center; } }
+  .equipo-foto{
+    width:100%; aspect-ratio:1/1; border-radius:10px; overflow:hidden;
+    background:linear-gradient(135deg, var(--green), var(--teal));
+  }
+  .equipo-foto img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .equipo-info .eyebrow{ display:block; margin-bottom:8px; }
+  .equipo-info h2{ font-size:1.5rem; margin-bottom:4px; }
+  .equipo-info .rol{ color:var(--teal); font-weight:600; font-size:.95rem; margin-bottom:18px; }
+  .equipo-info p.bio{ font-size:.96rem; line-height:1.75; color:var(--ink-soft); margin-bottom:20px; }
+  .equipo-info ul{ list-style:none; padding:0; margin:0 0 24px; text-align:left; }
+  .equipo-info li{
+    font-size:.88rem; color:var(--ink-soft); padding:8px 0 8px 22px; position:relative; border-bottom:1px solid var(--rule);
+  }
+  .equipo-info li:last-child{ border-bottom:none; }
+  .equipo-info li::before{ content:"—"; position:absolute; left:0; color:var(--green); }
+  .equipo-info .btns{ display:flex; gap:14px; flex-wrap:wrap; }
+  @media (max-width:760px){ .equipo-info ul{ text-align:left; } .equipo-info .btns{ justify-content:center; } }
+
+  section.cta-final{ padding: clamp(60px,8vw,100px) 0; text-align:center; background: var(--ink); color:#fff; }
+  section.cta-final h2{ color:#fff; font-size:clamp(1.8rem,3.4vw,2.5rem); max-width:640px; margin:0 auto 18px; }
+  section.cta-final p{ color:rgba(255,255,255,.75); max-width:560px; margin:0 auto 32px; font-size:1.02rem; line-height:1.6; }
+  section.cta-final .ctas{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+  section.cta-final .tagline{ margin-top:50px; color:rgba(255,255,255,.5); font-size:.85rem; letter-spacing:.08em; text-transform:uppercase; }
+
+  footer.site{ background:#0A1F22; color:rgba(255,255,255,.65); padding:44px 0 28px; }
+  footer.site .wrap{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px; }
+  footer.site strong{ color:#fff; font-family:'Poppins',sans-serif; }
+  footer.site a:hover{ color:#fff; }
+  footer.site .bottom{ margin-top:30px; padding-top:20px; border-top:1px solid rgba(255,255,255,.12); font-size:.8rem; text-align:center; color:rgba(255,255,255,.45); }
+</style>
 </head>
 <body>
 
-  <header class="header">
-    <div class="contenedor header__barra">
-      <a class="header__marca" href="index.html">Trinomio SAS</a>
-      <button class="header__toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="headerMenu">☰</button>
-      <nav class="header__menu" id="headerMenu" aria-label="Principal">
-        <a class="header__menu__link" href="index.html">Home</a>
-        <a class="header__menu__link" href="about.html" aria-current="page">Sobre nosotros</a>
-        <a class="header__menu__link" href="servicios.html">Servicios</a>
-        <a class="header__menu__link" href="noticias.html">Noticias</a>
-      </nav>
+<nav class="site">
+  <div class="wrap">
+    <a href="index.html"><img src="assets/logo%20empresa%20tri.png" alt="Trinomio SAS" style="height:42px; display:block;"></a>
+    <div class="links">
+      <a href="index.html">Home</a>
+      <a class="active" href="about.html">Sobre nosotros</a>
+      <a href="servicios.html">Servicios</a>
+      <a href="noticias.html">Noticias</a>
     </div>
-  </header>
-
-  <main>
-
-    <!-- Quiénes somos -->
-    <section class="hero">
-      <div class="contenedor">
-        <p class="formula" aria-label="Especialistas más conocimiento académico y normativo más tecnología es igual a Trinomio">
-          <span>Especialistas</span>
-          <span class="formula__op" aria-hidden="true">+</span>
-          <span>Conocimiento académico y normativo</span>
-          <span class="formula__op" aria-hidden="true">+</span>
-          <span>Tecnología</span>
-          <span class="formula__op" aria-hidden="true">=</span>
-          <span class="formula__resultado">Trinomio</span>
-        </p>
-        <h1>Cerramos la brecha entre el aula, la norma y la empresa.</h1>
-        <p class="hero__texto">
-          Trinomio SAS es una plataforma de conocimiento, formación y herramientas profesionales.
-          Transformamos la experiencia contable, tributaria, laboral, financiera y de costos
-          en soluciones prácticas y verificables.
-        </p>
-      </div>
-    </section>
-
-    <!-- Esencia -->
-    <section class="seccion" aria-labelledby="titulo-esencia">
-      <div class="contenedor">
-        <div class="seccion__intro">
-          <h2 id="titulo-esencia">Tres fuentes de valor que rara vez llegan juntas</h2>
-          <p>
-            Experiencia de campo, rigor académico de especialización y tecnología aplicada.
-            Lo que nos diferencia no es enseñar, asesorar, crear formatos o automatizar por separado:
-            es hacer las cuatro cosas sobre casos reales, con un recorrido que siempre se puede verificar.
-          </p>
-        </div>
-        <ol class="flujo" aria-label="Recorrido de cada solución">
-          <li>Problema real</li>
-          <li>Metodología</li>
-          <li>Herramienta</li>
-          <li>Análisis</li>
-          <li>Decisión</li>
-          <li>Control</li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- Misión y visión -->
-    <section class="seccion seccion--menta" aria-label="Misión y visión">
-      <div class="contenedor dos-columnas">
-        <div>
-          <h2>Misión</h2>
-          <p>
-            Reunimos especialistas, experiencia de campo y formación académica avanzada para
-            desarrollar soluciones que faciliten el trabajo diario de empresas, contadores públicos,
-            estudiantes y profesionales.
-          </p>
-          <p>
-            Integramos normativa, metodología y tecnología para convertir procesos complejos en
-            herramientas, modelos, guías, formación aplicada y automatizaciones que ahorran tiempo,
-            reducen errores, fortalecen el control y sustentan mejores decisiones.
-          </p>
-          <p class="proposito">Nuestro propósito: cerrar la brecha entre lo que se aprende en el aula, lo que exige la norma y lo que ocurre en la empresa colombiana.</p>
-        </div>
-        <div>
-          <h2>Visión</h2>
-          <p>
-            Ser en Colombia la plataforma de referencia donde empresas, contadores públicos,
-            estudiantes y profesionales encuentran conocimiento confiable, herramientas verificables
-            y acompañamiento especializado.
-          </p>
-          <p>
-            Construimos un ecosistema para aprender, consultar, calcular, analizar y gestionar
-            información de forma ágil y estructurada, con una gestión responsable frente a las
-            obligaciones empresariales y los entes de control.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Valores -->
-    <section class="seccion" aria-labelledby="titulo-valores">
-      <div class="contenedor">
-        <div class="seccion__intro">
-          <h2 id="titulo-valores">Nuestros valores</h2>
-        </div>
-        <ul class="valores">
-          <li><strong>Rigor</strong><span>Cada herramienta se sustenta en norma, metodología y evidencia.</span></li>
-          <li><strong>Claridad</strong><span>Explicamos lo complejo en lenguaje aplicable.</span></li>
-          <li><strong>Trazabilidad</strong><span>Todo resultado debe poder verificarse y auditarse.</span></li>
-          <li><strong>Formación continua</strong><span>El conocimiento se actualiza con la norma y con la práctica.</span></li>
-          <li><strong>Confidencialidad</strong><span>La información de cada cliente se protege y los casos se publican anonimizados.</span></li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- A quién servimos -->
-    <section class="seccion seccion--menta" aria-labelledby="titulo-publicos">
-      <div class="contenedor">
-        <div class="seccion__intro">
-          <h2 id="titulo-publicos">A quién servimos</h2>
-          <p>Cada público llega con un problema distinto. Respondemos con la misma base de conocimiento, adaptada a su necesidad.</p>
-        </div>
-        <div class="tabla-scroll">
-          <table class="publicos">
-            <thead>
-              <tr>
-                <th scope="col">Público</th>
-                <th scope="col">El problema que trae</th>
-                <th scope="col">Lo que le entregamos</th>
-                <th scope="col">En una frase</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row">Empresas y empresarios</th>
-                <td>No saben cuánto les cuesta cada producto, servicio o proceso; temen contingencias fiscales.</td>
-                <td>Modelos de costeo, políticas y procedimientos, tableros de indicadores, consultoría e implementación en ERP.</td>
-                <td>Entienda sus números antes de decidir.</td>
-              </tr>
-              <tr>
-                <th scope="row">Contadores públicos</th>
-                <td>Tiempo perdido en cálculos repetitivos, revisión manual y actualización normativa.</td>
-                <td>Calculadoras, papeles de trabajo, guías tributarias y laborales, automatizaciones.</td>
-                <td>Menos tiempo calculando, más tiempo asesorando.</td>
-              </tr>
-              <tr>
-                <th scope="row">Estudiantes</th>
-                <td>Brecha entre la teoría y la práctica; casos poco realistas.</td>
-                <td>Casos reales anonimizados, plantillas guiadas, talleres y material aplicado.</td>
-                <td>Aprenda con casos de empresa, no solo con teoría.</td>
-              </tr>
-              <tr>
-                <th scope="row">Profesionales y equipos financieros</th>
-                <td>Necesidad de análisis rápido, sustentable y auditable.</td>
-                <td>Modelos financieros y de costos, indicadores, formación ejecutiva.</td>
-                <td>Análisis que resiste una auditoría.</td>
-              </tr>
-              <tr>
-                <th scope="row">Docentes e instituciones</th>
-                <td>Falta de material práctico actualizado.</td>
-                <td>Alianzas académicas, casos de estudio y herramientas para el aula.</td>
-                <td>Llevamos la empresa al aula.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- Pilar insignia -->
-    <section class="seccion" aria-labelledby="titulo-pilar">
-      <div class="contenedor dos-columnas">
-        <div>
-          <h2 id="titulo-pilar">Nuestra especialidad insignia: gerencia estratégica de costos</h2>
-          <p>
-            Una calculadora resuelve un cálculo. Un modelo de costos bien implementado cambia la forma
-            en que una empresa fija precios, controla inventarios y sustenta sus decisiones ante la DIAN.
-          </p>
-          <p>
-            Este pilar nace de la especialización en Gestión Estratégica de Costos y de su aplicación
-            en empresas reales: lo que se construye en la academia se convierte en metodología,
-            y la metodología en producto.
-          </p>
-        </div>
-        <ul class="lineas">
-          <li><strong>Costeo basado en actividades (ABC).</strong> Actividades, inductores y asignación de CIF por niveles.</li>
-          <li><strong>Políticas y procedimientos contables.</strong> Reconocimiento, medición y control de costos, inventarios y activos recuperados.</li>
-          <li><strong>Soporte fiscal.</strong> Análisis del tratamiento tributario y acompañamiento en consultas formales ante la DIAN.</li>
-          <li><strong>Implementación en ERP.</strong> El modelo de costos traducido a parámetros, centros de costo y reportes.</li>
-          <li><strong>Rentabilidad y decisiones.</strong> Márgenes por producto, cliente o línea, punto de equilibrio y escenarios.</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- Quién está detrás -->
-    <section class="seccion seccion--menta" aria-labelledby="titulo-equipo">
-      <div class="contenedor persona">
-        <img src="./assets/asesoria-tributaria (2).jpg" alt="Yoiner Suns Tacuma, de Trinomio SAS">
-        <div>
-          <h2 id="titulo-equipo">Quién está detrás</h2>
-          <p class="persona__rol">Yoiner Suns Tacuma · Fundador y analista contable</p>
-          <p>
-            Combino la experiencia contable con la programación para automatizar tareas y optimizar
-            procesos, siempre con soluciones claras y adaptadas a cada necesidad.
-          </p>
-          <ul>
-            <li>Más de 6 años de experiencia en contabilidad y nómina</li>
-            <li>Aplicación de normativa laboral y tributaria en Colombia</li>
-            <li>Formación en automatización con programación</li>
-            <li>Análisis de datos y mejora de procesos internos</li>
-            <li>Liderazgo de equipos y capacitación técnica</li>
-          </ul>
-          <a href="./assets/CV_Yoiner.pdf" target="_blank" rel="noopener" class="btn btn--contorno">Ver hoja de vida</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- Cierre -->
-    <section class="cierre">
-      <div class="contenedor">
-        <h2>Cuéntanos qué necesitas resolver</h2>
-        <p>Te respondemos con criterio profesional y una propuesta clara de cómo abordarlo.</p>
-        <div class="grupo-botones">
-          <a class="btn btn--claro" target="_blank" rel="noopener"
-             href="https://wa.me/573219246512?text=Hola%20Trinomio,%20quiero%20contarles%20lo%20que%20necesito%20resolver">
-            Escribir por WhatsApp
-          </a>
-          <a class="btn btn--claro" href="servicios.html">Ver servicios</a>
-        </div>
-        <p class="firma">Calcula. Consulta. Aprende. Automatiza. Decide.</p>
-      </div>
-    </section>
-
-  </main>
-
-  <footer class="footer">
-    <div class="contenedor">
-      <div class="footer__fila">
-        <div>
-          <strong>Trinomio SAS</strong>
-          Confianza en sus números. Conocimiento para decidir. Proyección para crecer.
-        </div>
-        <div>
-          <strong>Contacto</strong>
-          <a href="https://wa.me/573219246512" target="_blank" rel="noopener">WhatsApp +57 321 924 6512</a><br>
-          <a href="https://www.instagram.com/servicios_contables._/?hl=es" target="_blank" rel="noopener">Instagram</a>
-        </div>
-      </div>
-      <p class="footer__legal">© <span id="anio"></span> Trinomio SAS · Colombia</p>
-    </div>
-  </footer>
-
-  <div class="floating-buttons">
-    <a href="https://wa.me/573219246512?text=Hola%20Trinomio,%20necesito%20informacion%20sobre%20sus%20servicios"
-       target="_blank" rel="noopener" class="social-float whatsapp-float" data-tooltip="Escríbenos por WhatsApp" aria-label="Contactar por WhatsApp" title="WhatsApp">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.893 3.106"/></svg>
-    </a>
-    <a href="https://www.instagram.com/servicios_contables._/?hl=es"
-       target="_blank" rel="noopener" class="social-float instagram-float" data-tooltip="Síguenos en Instagram" aria-label="Síguenos en Instagram" title="Instagram">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-    </a>
   </div>
+</nav>
 
-  <script>
-    const menuToggle = document.getElementById('menuToggle');
-    const headerMenu = document.getElementById('headerMenu');
-    if (menuToggle && headerMenu) {
-      menuToggle.addEventListener('click', () => {
-        const abierto = headerMenu.classList.toggle('header__menu--open');
-        menuToggle.setAttribute('aria-expanded', abierto);
-      });
-    }
-    document.getElementById('anio').textContent = new Date().getFullYear();
-  </script>
+<header class="page-hero">
+  <div class="wrap">
+    <div class="formula">Especialistas + Conocimiento académico y normativo + Tecnología = Trinomio</div>
+    <h1>Cerramos la brecha entre <em>el aula, la norma</em> y la empresa.</h1>
+  </div>
+</header>
+
+<section class="intro">
+  <div class="wrap">
+    <p class="justify">Trinomio SAS es una plataforma de conocimiento, formación y herramientas profesionales. Transformamos la experiencia contable, tributaria, laboral, financiera y de costos en soluciones prácticas y verificables.</p>
+  </div>
+</section>
+
+<section class="tres-fuentes">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Tres fuentes de valor que rara vez llegan juntas</span>
+      <h2 style="margin-top:10px;">Experiencia, rigor académico y tecnología aplicada</h2>
+      <p class="justify">Lo que nos diferencia no es enseñar, asesorar, crear formatos o automatizar por separado: es hacer las cuatro cosas sobre casos reales, con un recorrido que siempre se puede verificar.</p>
+    </div>
+    <div class="pilares">
+      <div class="pilar">
+        <div class="n">1</div>
+        <h3>Experiencia de campo</h3>
+        <p>8 años en la industria de servicios, especialmente en telecomunicaciones, implementando estrategias reales en procesos operativos y contables — no solo teoría.</p>
+      </div>
+      <div class="pilar">
+        <div class="n">2</div>
+        <h3>Rigor académico</h3>
+        <p>Especialización en Gestión Estratégica de Costos, con metodologías como el costeo ABC sustentadas en norma contable, tributaria y laboral vigente.</p>
+      </div>
+      <div class="pilar">
+        <div class="n">3</div>
+        <h3>Tecnología aplicada</h3>
+        <p>La metodología convertida en calculadoras, automatizaciones y herramientas que cualquiera puede usar — no se queda en un documento.</p>
+      </div>
+    </div>
+    <p class="pilares-nota">"Lo que nos diferencia no es tener una de las tres — es tener las tres juntas, aplicadas sobre casos reales."</p>
+  </div>
+</section>
+
+<section class="mv">
+  <div class="wrap">
+    <div class="mv-grid">
+      <div class="mv-card">
+        <span class="eyebrow">Misión</span>
+        <h2>Convertir lo complejo en herramientas útiles</h2>
+        <p class="justify">Reunimos especialistas, experiencia de campo y formación académica avanzada para desarrollar soluciones que faciliten el trabajo diario de empresas, contadores públicos, estudiantes y profesionales.</p>
+        <p class="justify">Integramos normativa, metodología y tecnología para convertir procesos complejos en herramientas, modelos, guías, formación aplicada y automatizaciones que ahorran tiempo, reducen errores, fortalecen el control y sustentan mejores decisiones.</p>
+        <p class="justify">Nuestro propósito: cerrar la brecha entre lo que se aprende en el aula, lo que exige la norma y lo que ocurre en la empresa colombiana.</p>
+      </div>
+      <div class="mv-card">
+        <span class="eyebrow">Visión</span>
+        <h2>La plataforma de referencia en Colombia</h2>
+        <p class="justify">Ser en Colombia la plataforma de referencia donde empresas, contadores públicos, estudiantes y profesionales encuentran conocimiento confiable, herramientas verificables y acompañamiento especializado.</p>
+        <p class="justify">Construimos un ecosistema para aprender, consultar, calcular, analizar y gestionar información de forma ágil y estructurada, con una gestión responsable frente a las obligaciones empresariales y los entes de control.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="valores">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Nuestros valores</span>
+    </div>
+    <div class="valores-grid">
+      <div class="valor"><h3>Rigor</h3><p>Cada herramienta se sustenta en norma, metodología y evidencia.</p></div>
+      <div class="valor"><h3>Claridad</h3><p>Explicamos lo complejo en lenguaje aplicable.</p></div>
+      <div class="valor"><h3>Trazabilidad</h3><p>Todo resultado debe poder verificarse y auditarse.</p></div>
+      <div class="valor"><h3>Formación continua</h3><p>El conocimiento se actualiza con la norma y con la práctica.</p></div>
+      <div class="valor"><h3>Confidencialidad</h3><p>La información de cada cliente se protege y los casos se publican anonimizados.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="publico">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">A quién servimos</span>
+      <h2 style="margin-top:10px;">Cada público llega con un problema distinto</h2>
+      <p class="justify">Respondemos con la misma base de conocimiento, adaptada a su necesidad.</p>
+    </div>
+    <div class="publico-grid">
+      <div class="publico-card">
+        <span class="label">Empresas y empresarios</span>
+        <h3>No saben cuánto les cuesta cada producto o proceso</h3>
+        <p>Modelos de costeo, políticas y procedimientos, tableros de indicadores, consultoría e implementación en ERP.</p>
+        <div class="frase">"Entienda sus números antes de decidir."</div>
+      </div>
+      <div class="publico-card">
+        <span class="label">Contadores públicos</span>
+        <h3>Tiempo perdido en cálculos repetitivos</h3>
+        <p>Calculadoras, papeles de trabajo, guías tributarias y laborales, automatizaciones.</p>
+        <div class="frase">"Menos tiempo calculando, más tiempo asesorando."</div>
+      </div>
+      <div class="publico-card">
+        <span class="label">Estudiantes</span>
+        <h3>Brecha entre la teoría y la práctica</h3>
+        <p>Casos reales anonimizados, plantillas guiadas, talleres y material aplicado.</p>
+        <div class="frase">"Aprenda con casos de empresa, no solo con teoría."</div>
+      </div>
+      <div class="publico-card">
+        <span class="label">Profesionales y equipos financieros</span>
+        <h3>Necesitan análisis rápido y auditable</h3>
+        <p>Modelos financieros y de costos, indicadores, formación ejecutiva.</p>
+        <div class="frase">"Análisis que resiste una auditoría."</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="especialidad">
+  <div class="wrap especialidad-wrap">
+    <div class="head" style="text-align:left; margin:0 0 24px;">
+      <span class="eyebrow">Nuestra especialidad insignia</span>
+      <h2 style="margin-top:10px;">Gerencia estratégica de costos</h2>
+    </div>
+    <p class="justify">Una calculadora resuelve un cálculo. Un modelo de costos bien implementado cambia la forma en que una empresa fija precios, controla inventarios y sustenta sus decisiones ante la DIAN. Este pilar nace de la especialización en Gestión Estratégica de Costos y de su aplicación en empresas reales: lo que se construye en la academia se convierte en metodología, y la metodología en producto.</p>
+    <ul class="especialidad-list">
+      <li><strong>Costeo basado en actividades (ABC).</strong> Actividades, inductores y asignación de CIF por niveles.</li>
+      <li><strong>Políticas y procedimientos contables.</strong> Reconocimiento, medición y control de costos, inventarios y activos recuperados.</li>
+      <li><strong>Soporte fiscal.</strong> Análisis del tratamiento tributario y acompañamiento en consultas formales ante la DIAN.</li>
+      <li><strong>Implementación en ERP.</strong> El modelo de costos traducido a parámetros, centros de costo y reportes.</li>
+      <li><strong>Rentabilidad y decisiones.</strong> Márgenes por producto, cliente o línea, punto de equilibrio y escenarios.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="equipo">
+  <div class="wrap">
+    <div class="equipo-wrap">
+      <div class="equipo-foto">
+        <img src="assets/yoiner%20socio.jpeg" alt="Yoiner Suns Tacuma, de Trinomio SAS">
+      </div>
+      <div class="equipo-info">
+        <span class="eyebrow">Quién está detrás</span>
+        <h2>Yoiner Suns Tacuma</h2>
+        <div class="rol">Contador público · Especialista en gerencia financiera y gerencia estratégica de costos</div>
+        <p class="bio justify">Ocho años de experiencia en la industria de servicios, especialmente en el sector de las telecomunicaciones, diseñando e implementando estrategias en procesos operativos y contables. Combino la experiencia contable con la programación para automatizar tareas y optimizar procesos, siempre con soluciones claras y adaptadas a cada necesidad.</p>
+        <ul>
+          <li>8 años de experiencia en la industria de servicios, especialmente en telecomunicaciones</li>
+          <li>Diseño e implementación de estrategias en procesos operativos y contables</li>
+          <li>Desarrollo de políticas contables y metodologías de costeo ABC en procesos operativos</li>
+          <li>Ejecución de auditorías internas para evaluar mejoras operativas</li>
+          <li>Liderazgo en la transformación hacia entornos más digitalizados</li>
+          <li>Formación en automatización con programación y análisis de datos</li>
+        </ul>
+        <div class="btns">
+          <a class="btn btn-outline" href="assets/CV_Yoiner.pdf">Ver hoja de vida</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-final">
+  <div class="wrap">
+    <h2>Cuéntanos qué necesitas resolver</h2>
+    <p>Te respondemos con criterio profesional y una propuesta clara de cómo abordarlo.</p>
+    <div class="ctas">
+      <a class="btn btn-primary" href="https://wa.me/573219246512?text=Hola%20Trinomio,%20quiero%20contarles%20lo%20que%20necesito%20resolver">Escribir por WhatsApp</a>
+      <a class="btn btn-ghost" href="servicios.html">Ver servicios</a>
+    </div>
+    <div class="tagline">Calcula · Consulta · Aprende · Automatiza · Decide</div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <div style="max-width:320px;">
+      <strong>Trinomio SAS</strong>
+      <p style="margin-top:10px; font-size:.88rem; line-height:1.6;">Confianza en sus números. Conocimiento para decidir. Proyección para crecer.</p>
+    </div>
+    <div>
+      <strong style="display:block; margin-bottom:10px; font-size:.9rem;">Contacto</strong>
+      <a href="https://wa.me/573219246512" style="display:block; font-size:.88rem; margin-bottom:6px;">WhatsApp +57 321 924 6512</a>
+      <a href="https://www.instagram.com/servicios_contables._/?hl=es" style="display:block; font-size:.88rem;">Instagram</a>
+    </div>
+  </div>
+  <div class="bottom">© Trinomio SAS · Colombia</div>
+</footer>
+
 </body>
 </html>
