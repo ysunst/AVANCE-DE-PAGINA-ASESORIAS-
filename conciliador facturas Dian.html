@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es-mx">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conciliador de Facturas DIAN</title>
+    <meta name="description" content="Cruza el Excel de facturación electrónica de la DIAN con el auxiliar contable de tu ERP y encuentra facturas sin contabilizar, diferencias de valor y documentos sin soporte.">
+    <link rel="canonical" href="https://ysunst.github.io/AVANCE-DE-PAGINA-ASESORIAS-/conciliador-facturas-dian.html">
+    <link rel="stylesheet" href="./styles/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Hero con el degradado de las herramientas del sitio */
+        .cd-hero{background:linear-gradient(135deg,var(--verde),var(--teal));padding:3rem 1.5rem 4.5rem;text-align:center;color:#fff}
+        .cd-hero i{font-size:2.6rem;margin-bottom:.8rem}
+        .cd-hero h1{color:#fff;font-size:clamp(1.7rem,4vw,2.4rem);margin-bottom:.6rem}
+        .cd-hero p{max-width:720px;margin:0 auto;opacity:.95;font-size:1.05rem}
+        .cd-hero .cd-privado{display:inline-flex;gap:.5rem;align-items:center;margin-top:1.1rem;background:rgba(255,255,255,.15);border-radius:999px;padding:.35rem .9rem;font-size:.9rem}
+        .cd-hero .cd-privado i{font-size:.95rem;margin:0}
+
+        /* Herramienta: todo encapsulado en .cdian para no chocar con style.css */
+        .cdian{
+          --bg:var(--papel); --surface:#fff; --line:var(--linea); --fg:var(--texto); --muted:var(--suave);
+          --accent:var(--verde); --accent-2:var(--teal); --accent-soft:var(--menta);
+          --ok:#1d7a46; --ok-bg:#e3f4ea; --warn:#a15c00; --warn-bg:#fdf0dc;
+          --bad:#b3261e; --bad-bg:#fbe6e4; --info:#1e6a83; --info-bg:#e3f1f6; --dup:#6b3fa0; --dup-bg:#efe7f8;
+          --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+          max-width:1180px;margin:-2.75rem auto 3rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+          display:grid;gap:1.25rem;font-family:var(--f-texto);color:var(--fg);font-size:15px;line-height:1.5;position:relative
+        }
+        .cdian *{box-sizing:border-box}
+        .cdian [hidden],.cd-toast[hidden]{display:none!important}
+        .cdian h2{font-family:var(--f-titulo);font-size:1.05rem;font-weight:700;margin:0;color:var(--teal)}
+        .cdian .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+        .cdian .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.25rem;display:grid;gap:14px;min-width:0;box-shadow:0 6px 15px rgba(0,0,0,.05)}
+        .cdian .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+        .cdian .drop{border:1.5px dashed var(--line);border-radius:10px;padding:16px;display:grid;gap:8px;cursor:pointer;transition:border-color .15s,background .15s;background:var(--gris-card)}
+        .cdian .drop:hover,.cdian .drop.over{border-color:var(--accent);background:var(--accent-soft)}
+        .cdian .drop input{display:none}
+        .cdian .drop strong{font-family:var(--f-titulo);font-size:.95rem}
+        .cdian .drop .file{font-family:var(--mono);font-size:12px;color:var(--muted);word-break:break-all}
+        .cdian .drop .file.loaded{color:var(--ok);font-weight:600}
+        .cdian .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+        .cdian label.f{display:grid;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+        .cdian select,.cdian input[type=number],.cdian input[type=search],.cdian input[type=text]{font:inherit;font-size:14px;color:var(--fg);background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-width:0}
+        .cdian select:focus-visible,.cdian input:focus-visible,.cdian button:focus-visible,.cdian .drop:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+        .cdian .map{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+        .cdian .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+        .cdian .seg button{border:0;background:transparent;color:var(--muted);padding:8px 14px;font:inherit;font-size:14px;cursor:pointer}
+        .cdian .seg button[aria-pressed=true]{background:var(--accent);color:#fff;font-weight:600}
+        .cdian .cd-btn{font:inherit;font-weight:600;font-size:14px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:8px;padding:9px 16px;cursor:pointer;display:inline-flex;gap:.45rem;align-items:center}
+        .cdian .cd-btn:hover{background:var(--verde-oscuro)}
+        .cdian .cd-btn.ghost{background:transparent;color:var(--accent-2);border-color:var(--accent-2)}
+        .cdian .cd-btn.ghost:hover{background:#e3f1f6}
+        .cdian .note{font-size:12.5px;color:var(--muted)}
+        .cdian .sample{font-size:12px;background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:6px 10px}
+        .cdian .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+        .cdian .tile{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:2px;cursor:pointer;background:#fff;text-align:left;font:inherit;color:inherit;border-left:4px solid var(--c)}
+        .cdian .tile[aria-pressed=true]{background:var(--cb)}
+        .cdian .tile .n{font-family:var(--f-titulo);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+        .cdian .tile .v{font-family:var(--mono);font-size:12px;color:var(--muted)}
+        .cdian .tile .l{font-size:12px;font-weight:600}
+        .cdian .tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;max-height:620px;overflow-y:auto}
+        .cdian table{border-collapse:collapse;width:100%;font-size:13px}
+        .cdian th,.cdian td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;vertical-align:top}
+        .cdian th{position:sticky;top:0;background:var(--gris-card);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);z-index:1}
+        .cdian td.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px}
+        .cdian td.mono{font-family:var(--mono);font-size:12px}
+        .cdian td.diff{color:var(--bad);font-weight:600}
+        .cdian td.wrapc{white-space:normal;min-width:240px;color:var(--muted);font-size:12px}
+        .cdian .pill{display:inline-block;font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px;background:var(--cb);color:var(--c)}
+        .cdian .s-ok{--c:var(--ok);--cb:var(--ok-bg)} .cdian .s-dif{--c:var(--warn);--cb:var(--warn-bg)}
+        .cdian .s-dian{--c:var(--bad);--cb:var(--bad-bg)} .cdian .s-erp{--c:var(--info);--cb:var(--info-bg)} .cdian .s-dup{--c:var(--dup);--cb:var(--dup-bg)}
+        .cdian .disclaimer{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;margin:0}
+        .cdian details summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--teal)}
+        .cdian details ul{margin:.5rem 0 0 1.1rem;display:grid;gap:.3rem}
+        .cdian .cfg{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:14px}
+        .cdian .cfgh{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
+        .cdian .types{display:flex;flex-wrap:wrap;gap:8px}
+        .cdian .chk{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;background:#fff}
+        .cdian .chk:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+        .cdian .chk span{color:var(--muted)} .cdian .chk .cnt{font-family:var(--mono);font-size:11px}
+        .cdian .chk input{accent-color:var(--accent);margin:0}
+        .cdian .cta{background:var(--tinta);color:#e3efe8;border-radius:14px;padding:1.4rem;display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between}
+        .cdian .cta h3{font-family:var(--f-titulo);color:#fff;font-size:1.1rem;margin:0 0 .25rem}
+        .cdian .cta p{margin:0;font-size:.95rem;max-width:60ch}
+        .cdian .cta a{background:#25d366;color:#0b2a17;font-weight:700;text-decoration:none;border-radius:8px;padding:.7rem 1.1rem;display:inline-flex;gap:.5rem;align-items:center}
+        .cd-toast{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:9px 14px;border-radius:8px;font-size:14px;z-index:50;max-width:calc(100% - 32px)}
+        @media (prefers-reduced-motion:reduce){.cdian *{transition:none!important}}
+    </style>
+</head>
+<body>
+    <div class="floating-buttons">
+        <a href="https://wa.me/573219246512?text=Hola,%20necesito%20información%20sobre%20sus%20servicios%20contables" target="_blank" class="social-float whatsapp-float" data-tooltip="Contactar por WhatsApp" title="WhatsApp">
+            <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.893 3.106"/></svg>
+        </a>
+        <a href="https://www.instagram.com/servicios_contables._/?hl=es" target="_blank" class="social-float instagram-float" data-tooltip="Síguenos en Instagram" title="Instagram">
+            <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        </a>
+        <a href="https://github.com/ysunst/Incriptador-de-texto-" target="_blank" class="social-float github-float" data-tooltip="Ver repositorios en GitHub" title="GitHub">
+            <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        </a>
+    </div>
+
+    <header class="header">
+        <div class="header__top">
+            <button class="header__toggle" id="menuToggle" aria-label="Abrir menú">☰</button>
+        </div>
+        <nav class="header__menu" id="headerMenu">
+            <a class="header__menu__link" href="index.html">Home</a>
+            <a class="header__menu__link" href="about.html">Sobre nosotros</a>
+            <a class="header__menu__link" href="servicios.html">Servicios</a>
+            <a class="header__menu__link" href="noticias.html">Noticias</a>
+        </nav>
+    </header>
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const headerMenu = document.getElementById('headerMenu');
+        if (menuToggle && headerMenu) {
+            menuToggle.addEventListener('click', () => {
+                headerMenu.classList.toggle('header__menu--open');
+            });
+        }
+    </script>
+
+    <section class="cd-hero">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <h1>Conciliador de Facturas DIAN</h1>
+        <p>Cruza el Excel de facturación electrónica de la DIAN con el auxiliar contable de tu ERP. Encuentra facturas sin contabilizar, diferencias de valor y registros sin factura electrónica.</p>
+        <span class="cd-privado"><i class="fas fa-lock"></i> Tus archivos se procesan en tu navegador. No se suben a ningún servidor.</span>
+    </section>
+
+    <main class="cdian">
+      <div class="panel">
+        <div class="row" style="justify-content:space-between">
+          <h2>Tipo de documentos</h2>
+          <div class="seg" role="group" aria-label="Tipo de documentos">
+            <button id="mRec" aria-pressed="true">Recibidas (compras)</button>
+            <button id="mEmi" aria-pressed="false">Emitidas (ventas)</button>
+          </div>
+        </div>
+        <p class="note" style="margin:0">Se elige solo según la columna Grupo del archivo DIAN. Puedes cambiarlo aquí.</p>
+      </div>
+  <section class="panel">
+    <div class="row" style="justify-content:space-between">
+      <h2>1. Cargar archivos</h2>
+      <span class="sample" id="sampleTag">Datos de ejemplo cargados. Sube tus archivos para reemplazarlos.</span>
+    </div>
+    <div class="grid2">
+      <label class="drop" id="dDian" tabindex="0">
+        <span class="eyebrow">Archivo DIAN</span>
+        <strong>Excel de documentos recibidos/emitidos</strong>
+        <span class="note">Descárgalo en catalogo-vpfe.dian.gov.co → Documentos → Recibidos o Enviados → Exportar a Excel.</span>
+        <span class="file" id="fDian">Ningún archivo · usando ejemplo</span>
+        <input type="file" id="iDian" accept=".xlsx,.xls,.csv">
+      </label>
+      <label class="drop" id="dErp" tabindex="0">
+        <span class="eyebrow">Archivo ERP</span>
+        <strong>Auxiliar contable o listado de facturas</strong>
+        <span class="note">Auxiliar por movimientos (cuenta, débito, crédito, tercero, detalle) de todas las cuentas del periodo, o un listado de facturas con NIT, número y valores.</span>
+        <span class="file" id="fErp">Ningún archivo · usando ejemplo</span>
+        <input type="file" id="iErp" accept=".xlsx,.xls,.csv">
+      </label>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="row" style="justify-content:space-between">
+      <h2>2. Configuración del ERP</h2>
+      <span class="pill s-ok" id="kindLbl"></span>
+    </div>
+    <p class="note" style="margin:0">Las columnas se detectaron automáticamente. Corrige las que no correspondan. El archivo DIAN se lee con su formato estándar.</p>
+    <div class="map" id="map"></div>
+    <div id="auxCfg" class="cfg" hidden>
+      <div class="cfgh"><span class="eyebrow">Cuentas PUC</span><span class="note">Prefijos separados por coma. Cada factura se reconstruye como cuenta por pagar (o cobrar) más retenciones.</span></div>
+      <div class="map">
+        <label class="f">Cuentas por pagar (compras)<input type="text" id="aCxp" value="2205, 2335"></label>
+        <label class="f">Cuentas por cobrar (ventas)<input type="text" id="aCxc" value="1305"></label>
+        <label class="f">IVA<input type="text" id="aIva" value="2408"></label>
+        <label class="f">Retenciones practicadas (compras)<input type="text" id="aRetC" value="2365, 2367, 2368"></label>
+        <label class="f">Retenciones que te practican (ventas)<input type="text" id="aRetV" value="1355"></label>
+      </div>
+      <div class="cfgh"><span class="eyebrow">Tipos de documento incluidos</span><span class="note">Desmarca pagos, recibos y demás comprobantes que no causan facturas.</span></div>
+      <div class="types" id="types"></div>
+      <p class="note" id="auxInfo" style="margin:0"></p>
+    </div>
+    <div class="row">
+      <label class="f">Tolerancia por redondeo ($)<input type="number" id="tol" value="100" min="0" step="1"></label>
+      <label class="f">Comparar valor
+        <select id="cmpField"><option value="total">Total</option><option value="iva">IVA</option><option value="both" selected>Total e IVA</option></select>
+      </label>
+      <label class="f" id="listCfg">Total DIAN a comparar
+        <select id="baseDian"><option value="bruto" selected>Total factura</option><option value="neto">Total menos Rete IVA, Renta e ICA</option></select>
+      </label>
+      <button class="cd-btn" id="run">Conciliar</button>
+    </div>
+  </section>
+
+  <section class="panel" id="res">
+    <div class="row" style="justify-content:space-between">
+      <h2>3. Resultado</h2>
+      <div class="row">
+        <input type="search" id="q" placeholder="Buscar NIT, nombre o factura" aria-label="Buscar">
+        <button class="cd-btn ghost" id="copy"><i class="far fa-copy"></i> Copiar</button>
+        <button class="cd-btn" id="xls"><i class="fas fa-file-excel"></i> Descargar Excel</button>
+      </div>
+    </div>
+    <div class="tiles" id="tiles"></div>
+    <div class="tbl"><table><thead><tr>
+      <th>Estado</th><th>NIT</th><th>Tercero</th><th>Factura</th><th>Comprobante ERP</th><th>Fecha DIAN</th><th>Fecha ERP</th>
+      <th>Total DIAN</th><th>Total ERP</th><th>Dif. total</th><th>IVA DIAN</th><th>IVA ERP</th><th>Dif. IVA</th><th>Observación</th>
+    </tr></thead><tbody id="tb"></tbody></table></div>
+    <details>
+      <summary>Cómo se cruzan los documentos</summary>
+      <ul class="note">
+        <li>Llave principal: NIT del tercero (sin dígito de verificación) + prefijo y número de factura, sin espacios ni guiones.</li>
+        <li>Si no hay coincidencia exacta, se intenta con NIT + número sin prefijo ni ceros a la izquierda.</li>
+        <li>En el archivo DIAN solo se toman facturas, notas crédito/débito y documentos soporte; los eventos (Application Response) se excluyen.</li>
+        <li>Con un auxiliar contable, cada comprobante se reconstruye: total = cuenta por pagar (o cobrar) + retenciones; IVA = cuenta 2408. El número de la factura se busca en el detalle y la descripción del comprobante.</li>
+        <li>Si el número no aparece, se cruza por NIT y valor (solo si hay una única factura candidata) y queda marcada para verificar.</li>
+        <li>En un listado de facturas, las líneas con la misma llave se suman antes de comparar.</li>
+        <li>Una factura de la DIAN que aparece dos veces se marca como duplicada.</li>
+        <li>La columna Grupo (Recibido / Emitido) define el modo automáticamente; si el archivo trae ambos, solo se cruzan los del modo elegido.</li>
+        <li>Facturas en divisa distinta a COP se marcan para revisar la tasa de cambio usada en el ERP.</li>
+        <li>Si el ERP registra la cuenta por pagar neta de retenciones, usa “Total menos Rete IVA, Renta e ICA”.</li>
+      </ul>
+    </details>
+    <p class="disclaimer">Resultado informativo. No sustituye una revisión profesional. Los documentos en “Solo en ERP” y “Diferencia de valor” deben revisarse con el soporte antes de ajustar la contabilidad o la declaración.</p>
+  </section>
+
+      <div class="cta">
+        <div>
+          <h3>¿Quieres que hagamos la conciliación por ti?</h3>
+          <p>Revisamos las diferencias, preparamos los ajustes contables y dejamos el soporte listo para la declaración de renta e IVA.</p>
+        </div>
+        <a href="https://wa.me/573219246512?text=Hola,%20quiero%20apoyo%20con%20la%20conciliaci%C3%B3n%20de%20facturas%20DIAN" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> Escribir por WhatsApp</a>
+      </div>
+    </main>
+    <div class="cd-toast" id="toast" hidden></div>
+
+    <footer class="footer">
+        <p>Desarrollado por Yoiner Suns</p>
+    </footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+
+const $=id=>document.getElementById(id);
+const fmt=n=>n==null||isNaN(n)?"—":n.toLocaleString("es-CO",{maximumFractionDigits:0});
+const fmtD=d=>d?d.toISOString().slice(0,10):"—";
+let mode="rec", dianRows=null, erpRows=null, erpHeaders=[], results=[], filter="all";
+
+const STATES={
+  ok:{l:"Conciliada",c:"s-ok"},
+  dif:{l:"Diferencia de valor",c:"s-dif"},
+  dian:{l:"Solo en DIAN",c:"s-dian",hint:"Sin contabilizar"},
+  erp:{l:"Solo en ERP",c:"s-erp",hint:"Sin factura electrónica"},
+  dup:{l:"Duplicada en DIAN",c:"s-dup"}
+};
+
+/* ---------- normalización ---------- */
+function num(v){
+  if(v==null||v==="")return 0;
+  if(typeof v==="number")return v;
+  let s=String(v).replace(/[$\s]/g,"").replace(/COP/i,"");
+  let neg=/^\(.*\)$/.test(s)||s.startsWith("-");s=s.replace(/[()\-]/g,"");
+  const hasC=s.includes(","),hasP=s.includes(".");
+  if(hasC&&hasP){ s=s.lastIndexOf(",")>s.lastIndexOf(".")?s.replace(/\./g,"").replace(",","."):s.replace(/,/g,""); }
+  else if(hasC){ s=/,\d{1,2}$/.test(s)?s.replace(/\./g,"").replace(",","."):s.replace(/,/g,""); }
+  else if(hasP){ const parts=s.split("."); if(parts.length>2||/\.\d{3}$/.test(s))s=s.replace(/\./g,""); }
+  const n=parseFloat(s);return isNaN(n)?0:(neg?-n:n);
+}
+function nit(v){ let s=String(v??"").trim(); if(/^\d[\d.\s]*-\s*\d$/.test(s))s=s.split("-")[0]; return s.replace(/\D/g,""); }
+function docKey(v){ return String(v??"").toUpperCase().replace(/[^A-Z0-9]/g,""); }
+function folioOnly(v){ const m=docKey(v).match(/(\d+)$/); return m?String(parseInt(m[1],10)):docKey(v); }
+function date(v){
+  if(v instanceof Date&&!isNaN(v))return v;
+  if(typeof v==="number"&&v>20000&&v<80000)return new Date(Math.round((v-25569)*864e5));
+  const s=String(v??"").trim(); let m;
+  if(m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/))return new Date(Date.UTC(+m[3],m[2]-1,+m[1]));
+  if(m=s.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/))return new Date(Date.UTC(+m[1],m[2]-1,+m[3]));
+  return null;
+}
+const norm=h=>String(h??"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().trim();
+
+/* ---------- lectura de archivos ---------- */
+function sheetToTable(wb,headerTest){
+  let best=null;
+  for(const name of wb.SheetNames){
+    const aoa=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,raw:true,defval:""});
+    for(let i=0;i<Math.min(aoa.length,20);i++){
+      const r=aoa[i].map(norm), score=headerTest(r);
+      if(score>0&&(!best||score>best.score))best={score,aoa,i};
+    }
+  }
+  if(!best)return null;
+  const headers=best.aoa[best.i].map(h=>String(h).trim());
+  const rows=best.aoa.slice(best.i+1).filter(r=>r.some(c=>c!==""&&c!=null)).map(r=>{
+    const o={};headers.forEach((h,j)=>{if(h)o[h]=r[j]});return o;});
+  return {headers:headers.filter(Boolean),rows};
+}
+function readFile(file){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onload=e=>{try{res(XLSX.read(new Uint8Array(e.target.result),{type:"array",cellDates:true}))}catch(err){rej(err)}};
+    fr.onerror=rej;fr.readAsArrayBuffer(file);
+  });
+}
+function findCol(headers,re,not){ return headers.find(h=>re.test(norm(h))&&!(not&&not.test(norm(h))))||""; }
+
+function parseDian(t){
+  const H=t.headers;
+  const c={tipo:findCol(H,/tipo de documento|^tipo/),cufe:findCol(H,/cufe|cude/),folio:findCol(H,/folio|numero/),
+    pref:findCol(H,/prefijo/),fecha:findCol(H,/fecha emision|fecha/),
+    nitE:findCol(H,/nit emisor/),nomE:findCol(H,/nombre emisor/),nitR:findCol(H,/nit receptor/),nomR:findCol(H,/nombre receptor/),
+    iva:findCol(H,/^iva$/),total:findCol(H,/^total$/),estado:findCol(H,/^estado$/),
+    grupo:findCol(H,/^grupo$/),divisa:findCol(H,/^divisa$/),
+    rIva:findCol(H,/^rete iva$/),rRenta:findCol(H,/^rete renta$/),rIca:findCol(H,/^rete ica$/),
+    inc:findCol(H,/^inc$/)};
+  const need={cufe:"CUFE/CUDE",folio:"Folio",nitE:"NIT Emisor",nitR:"NIT Receptor",total:"Total"};
+  const miss=Object.keys(need).filter(k=>!c[k]).map(k=>need[k]);
+  if(miss.length)throw new Error("Al archivo DIAN le faltan columnas: "+miss.join(", "));
+  return t.rows.filter(r=>{
+    const tp=norm(r[c.tipo]); return !/application|evento|acuse|reclamo|aceptacion|recibo/.test(tp);
+  }).map(r=>{
+    const pref=String(r[c.pref]??"").trim(), fol=String(r[c.folio]??"").trim();
+    const isNC=/credito/.test(norm(r[c.tipo]));
+    const sign=isNC?-1:1;
+    return {tipo:String(r[c.tipo]??""),cufe:String(r[c.cufe]??""),doc:(pref&&!fol.toUpperCase().startsWith(pref.toUpperCase())?pref:"")+fol,
+      fecha:date(r[c.fecha]),nitE:nit(r[c.nitE]),nomE:String(r[c.nomE]??""),nitR:nit(r[c.nitR]),nomR:String(r[c.nomR]??""),
+      iva:num(r[c.iva])*sign,total:num(r[c.total])*sign,estado:String(r[c.estado]??""),
+      inc:num(r[c.inc])*sign,rete:(num(r[c.rIva])+num(r[c.rRenta])+num(r[c.rIca]))*sign,
+      grupo:/emit/i.test(r[c.grupo])?"emi":/recib/i.test(r[c.grupo])?"rec":"",
+      divisa:String(r[c.divisa]??"").trim().toUpperCase()};
+  }).filter(r=>r.doc);
+}
+
+const LIST_FIELDS=[
+  {k:"nit",l:"NIT tercero",req:1,re:/nit|identific|tercero.*(id|doc)|cedula/,not:/nombre|razon/},
+  {k:"nombre",l:"Nombre tercero",re:/nombre|razon social|tercero|proveedor|cliente/,not:/nit|id/},
+  {k:"doc",l:"N.º factura",req:1,re:/factura|num.*doc|doc.*ref|documento|folio|consecutivo|numero|referencia/,not:/nit|tipo|identif/},
+  {k:"fecha",l:"Fecha",re:/fecha/},
+  {k:"total",l:"Valor total",req:1,re:/total|valor|neto|importe/,not:/iva|rete|base/},
+  {k:"iva",l:"IVA",re:/^iva|iva$|impuesto|valor iva/,not:/rete/}
+];
+const AUX_FIELDS=[
+  {k:"nit",l:"NIT / código tercero",req:1,re:/codigo tercero|nit|identific|cedula/,not:/nombre/},
+  {k:"nombre",l:"Nombre tercero",re:/nombre del tercero|nombre tercero|razon social/},
+  {k:"cuenta",l:"Cuenta contable",req:1,re:/^cuenta contable$|codigo cuenta|^cuenta/,not:/nombre/},
+  {k:"debito",l:"Débito",req:1,re:/^debito/},
+  {k:"credito",l:"Crédito",req:1,re:/^credito/},
+  {k:"tipo",l:"Tipo de documento",req:1,re:/^tipo de documento$|^tipo/,not:/sub/},
+  {k:"subtipo",l:"Subtipo de documento",re:/sub ?tipo/},
+  {k:"numero",l:"Número de documento",req:1,re:/^numero de documento$|^numero|consecutivo/},
+  {k:"fecha",l:"Fecha",re:/fecha de documento|^fecha/,not:/traslado/},
+  {k:"detalle",l:"Detalle (busca nº factura)",re:/detalle/},
+  {k:"descripcion",l:"Descripción (busca nº factura)",re:/descripcion/}
+];
+let erpKind="aux", erpMap={}, excluded=null;
+const fields=()=>erpKind==="aux"?AUX_FIELDS:LIST_FIELDS;
+const escH=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function detectKind(h){const n=h.map(norm);return n.some(x=>/^debito/.test(x))&&n.some(x=>/^credito/.test(x))&&n.some(x=>/cuenta/.test(x))?"aux":"list"}
+function buildMap(){
+  $("map").innerHTML=fields().map(f=>`<label class="f">${f.l}${f.req?" *":""}<select id="map_${f.k}">
+    <option value="">— No usar —</option>${erpHeaders.map(h=>`<option ${erpMap[f.k]===h?"selected":""}>${escH(h)}</option>`).join("")}</select></label>`).join("");
+  fields().forEach(f=>$("map_"+f.k).onchange=e=>{erpMap[f.k]=e.target.value;if(f.k==="tipo"||f.k==="subtipo"){excluded=null;buildTypes()}reconcile()});
+  $("auxCfg").hidden=erpKind!=="aux"; $("listCfg").hidden=erpKind==="aux";
+  $("kindLbl").textContent=erpKind==="aux"?"Auxiliar contable (débito / crédito)":"Listado de facturas";
+  buildTypes();
+}
+function autoMap(){ erpMap={}; excluded=null; const used=new Set();
+  fields().forEach(f=>{const h=erpHeaders.find(h=>!used.has(h)&&f.re.test(norm(h))&&!(f.not&&f.not.test(norm(h))));if(h){erpMap[f.k]=h;used.add(h)}});
+  buildMap(); }
+
+const PAY=/egreso|pago|recibo|ingreso|recaudo|banco|cheque|consign|traslado|cierre|apertura|nomina|depreciac|^ce$|^rc$|^ci$|^nm$/i;
+function buildTypes(){
+  const box=$("types"); if(erpKind!=="aux"||!erpMap.tipo){box.innerHTML="";return}
+  const cnt=new Map();
+  erpRows.forEach(r=>{const t=String(r[erpMap.tipo]??"").trim();if(!t)return;
+    const e=cnt.get(t)||{n:0,sub:erpMap.subtipo?String(r[erpMap.subtipo]??"").trim():""};e.n++;cnt.set(t,e)});
+  if(!excluded)excluded=new Set([...cnt].filter(([t,e])=>PAY.test(t)||PAY.test(e.sub)).map(([t])=>t));
+  box.innerHTML=[...cnt].sort((a,b)=>b[1].n-a[1].n).map(([t,e],i)=>`<label class="chk"><input type="checkbox" id="ty_${i}" data-t="${escH(t)}" ${excluded.has(t)?"":"checked"}>
+    <b>${escH(t)}</b>${e.sub?` <span>${escH(e.sub)}</span>`:""} <span class="cnt">${e.n}</span></label>`).join("");
+  box.querySelectorAll("input").forEach(c=>c.onchange=()=>{c.checked?excluded.delete(c.dataset.t):excluded.add(c.dataset.t);reconcile()});
+}
+
+/* ---------- conciliación ---------- */
+const tolV=()=>Math.abs(+$("tol").value||0);
+function prepDian(){
+  const neto=erpKind==="list"&&$("baseDian").value==="neto";
+  return dianRows.filter(d=>!d.grupo||d.grupo===mode).map(d=>({...d,nit:mode==="rec"?d.nitE:d.nitR,nom:mode==="rec"?d.nomE:d.nomR,
+    total:neto?d.total-(d.rete||0):d.total}));
+}
+function dNotes(d){
+  let o="";
+  if(/credito/.test(norm(d.tipo)))o+="Nota crédito. ";
+  if(/rechaz/i.test(d.estado))o+="Documento rechazado por la DIAN: no soporta costo ni IVA descontable. ";
+  else if(d.estado&&!/aprob/i.test(d.estado))o+=`Estado DIAN: ${d.estado}. `;
+  if(d.divisa&&d.divisa!=="COP")o+=`Factura en ${d.divisa}: revisar TRM aplicada. `;
+  if(d.inc)o+=`Incluye INC $${fmt(d.inc)}. `;
+  return o;
+}
+function dedupe(dian,out){
+  const seen=new Set(),keep=[];
+  for(const d of dian){const k=d.cufe||d.nit+"|"+docKey(d.doc);
+    if(seen.has(k)){out.push(mk("dup",d,null,"Mismo CUFE/número ya listado en el archivo DIAN"));continue}
+    seen.add(k);keep.push(d)}
+  return keep;
+}
+function compare(d,e,extra){
+  const tol=tolV(), cmp=$("cmpField").value;
+  const dT=e.total-d.total, dI=e.hasIva?e.iva-d.iva:0;
+  const badT=cmp!=="iva"&&Math.abs(dT)>tol, badI=cmp!=="total"&&e.hasIva&&Math.abs(dI)>tol;
+  let obs=extra||"";
+  if(badT)obs+=`Total ERP ${dT>0?"mayor":"menor"} en $${fmt(Math.abs(dT))}. `;
+  if(badI)obs+=`IVA ERP ${dI>0?"mayor":"menor"} en $${fmt(Math.abs(dI))}. `;
+  obs+=dNotes(d);
+  return mk(badT||badI||/rechaz/i.test(d.estado)?"dif":"ok",d,e,obs.trim());
+}
+function reconcile(){
+  if(!dianRows||!erpRows)return;
+  const out=[];
+  if((erpKind==="aux"?reconcileAux(out):reconcileList(out))===false)return;
+  const order={dian:0,erp:1,dif:2,dup:3,ok:4};
+  results=out.sort((a,b)=>order[a.st]-order[b.st]||a.nit.localeCompare(b.nit));
+  render();
+}
+
+function reconcileList(out){
+  if(!erpMap.nit||!erpMap.doc||!erpMap.total){toast("Asigna NIT, N.º factura y Valor total del ERP.");return false}
+  const dian=dedupe(prepDian(),out);
+  const erp=new Map();
+  for(const r of erpRows){
+    const n=nit(r[erpMap.nit]), d=docKey(r[erpMap.doc]); if(!n||!d)continue;
+    const k=n+"|"+d;
+    const e=erp.get(k)||{nit:n,doc:String(r[erpMap.doc]).trim(),nom:"",fecha:null,total:0,iva:0,lines:0,used:false,hasIva:!!erpMap.iva,comp:""};
+    e.total+=num(r[erpMap.total]); if(erpMap.iva)e.iva+=num(r[erpMap.iva]);
+    if(erpMap.nombre&&!e.nom)e.nom=String(r[erpMap.nombre]??""); if(erpMap.fecha&&!e.fecha)e.fecha=date(r[erpMap.fecha]);
+    e.lines++; erp.set(k,e);
+  }
+  const byFolio=new Map(); for(const e of erp.values()){const fk=e.nit+"|"+folioOnly(e.doc);(byFolio.get(fk)||byFolio.set(fk,[]).get(fk)).push(e)}
+  for(const d of dian){
+    let e=erp.get(d.nit+"|"+docKey(d.doc)), how="";
+    if(!e||e.used){const c=(byFolio.get(d.nit+"|"+folioOnly(d.doc))||[]).filter(x=>!x.used);if(c.length===1){e=c[0];how="Cruzada por número sin prefijo. "}else e=null}
+    if(!e){out.push(mk("dian",d,null,dNotes(d)+"No está registrada en el ERP"));continue}
+    e.used=true;
+    out.push(compare(d,e,how+(e.lines>1?`${e.lines} líneas en ERP sumadas. `:"")));
+  }
+  for(const e of erp.values()) if(!e.used) out.push(mk("erp",null,e,"No existe en la DIAN para este NIT y número. Revisar soporte o deducibilidad"));
+}
+
+function reconcileAux(out){
+  const miss=AUX_FIELDS.filter(f=>f.req&&!erpMap[f.k]);
+  if(miss.length){toast("Asigna en el ERP: "+miss.map(f=>f.l).join(", "));return false}
+  const m=erpMap, rec=mode==="rec", tol=tolV(), cmp=$("cmpField").value;
+  const pre=id=>$(id).value.split(/[,;\s]+/).map(s=>s.replace(/\D/g,"")).filter(Boolean);
+  const P={cx:pre(rec?"aCxp":"aCxc"),iva:pre("aIva"),ret:pre(rec?"aRetC":"aRetV")};
+  const has=(c,l)=>l.some(p=>c.startsWith(p));
+  const dian=dedupe(prepDian(),out);
+  const dN=new Set(dian.map(d=>d.nit));
+  // Código tercero con DV pegado (ej. 9001234561) → se recorta si así coincide con un NIT de la DIAN
+  const fixNit=n=>dN.has(n)||n.length<7?n:(dN.has(n.slice(0,-1))?n.slice(0,-1):n);
+
+  // 1. Agrupar líneas por comprobante
+  const comps=new Map(); let skipped=0;
+  for(const r of erpRows){
+    const tipo=String(r[m.tipo]??"").trim();
+    if(excluded&&excluded.has(tipo)){skipped++;continue}
+    const numero=String(r[m.numero]??"").trim(); if(!numero)continue;
+    const cta=String(r[m.cuenta]??"").replace(/\D/g,"");
+    const kind=has(cta,P.cx)?"cx":has(cta,P.iva)?"iva":has(cta,P.ret)?"ret":"";
+    const ck=tipo+" "+numero;
+    (comps.get(ck)||comps.set(ck,[]).get(ck)).push({kind,nit:fixNit(nit(r[m.nit])),nom:String(r[m.nombre]??"").trim(),
+      deb:num(r[m.debito]),cred:num(r[m.credito]),fecha:m.fecha?date(r[m.fecha]):null,numero,
+      txt:[...new Set([m.detalle&&r[m.detalle],m.descripcion&&r[m.descripcion]].filter(x=>x!=null&&x!=="").map(x=>String(x).trim()))].join(" ")});
+  }
+  // 2. Reconstruir la factura: total = cuenta por pagar/cobrar + retenciones; IVA = cuenta 2408
+  const groups=[];
+  for(const [ck,lines] of comps){
+    const T=[...new Set(lines.filter(l=>l.kind==="cx").map(l=>l.nit))]; if(!T.length)continue;
+    const G=new Map(T.map(t=>[t,{nit:t,nom:"",comp:ck,numero:lines[0].numero,fecha:null,cx:0,iva:0,ret:0,hasIva:true,txt:new Set()}]));
+    for(const l of lines){
+      const g=G.get(T.length===1?T[0]:l.nit); if(!g)continue;
+      if(l.txt)g.txt.add(String(l.txt)); if(!g.fecha&&l.fecha)g.fecha=l.fecha;
+      if(l.kind==="cx"){g.cx+=rec?l.cred-l.deb:l.deb-l.cred; if(!g.nom)g.nom=l.nom}
+      else if(l.kind==="iva")g.iva+=rec?l.deb-l.cred:l.cred-l.deb;
+      else if(l.kind==="ret")g.ret+=rec?l.cred-l.deb:l.deb-l.cred;
+    }
+    for(const g of G.values()){g.total=g.cx+g.ret;g.text=[...g.txt].join(" · ");if(Math.abs(g.total)>0.5)groups.push(g)}
+  }
+  // 3. Cruce: NIT + número de factura encontrado en el detalle o la descripción
+  const byNit=new Map(); dian.forEach(d=>(byNit.get(d.nit)||byNit.set(d.nit,[]).get(d.nit)).push(d));
+  const used=new Set();
+  const tokens=s=>new Set(String(s).toUpperCase().split(/[^A-Z0-9]+/).map(t=>{const x=t.match(/^[A-Z]*0*(\d+)$/);return x?x[1]:null}).filter(Boolean));
+  const findIn=(g,src)=>{ if(!src)return[]; const k=docKey(src), tk=tokens(src);
+    return (byNit.get(g.nit)||[]).filter(d=>{const dk=docKey(d.doc);
+      return !used.has(d)&&((/[A-Z]/.test(dk)&&dk.length>=3&&k.includes(dk))||tk.has(folioOnly(d.doc)))}); };
+  const pending=[];
+  for(const g of groups){
+    let c=findIn(g,g.text), via="";
+    if(!c.length){c=findIn(g,g.numero);if(c.length)via="Número tomado del consecutivo del comprobante. "}
+    if(!c.length){pending.push(g);continue}
+    c.forEach(d=>used.add(d));
+    if(c.length===1){out.push(compare(c[0],g,via));continue}
+    const sT=c.reduce((s,d)=>s+d.total,0), sI=c.reduce((s,d)=>s+d.iva,0);
+    const okS=(cmp==="iva"||Math.abs(g.total-sT)<=tol)&&(cmp==="total"||Math.abs(g.iva-sI)<=tol);
+    c.forEach(d=>{const r=mk(okS&&!/rechaz/i.test(d.estado)?"ok":"dif",d,null,
+      `El comprobante agrupa ${c.length} facturas: total ERP $${fmt(g.total)} vs DIAN $${fmt(sT)}. `+dNotes(d));
+      r.fE=g.fecha;r.comp=g.comp;out.push(r)});
+  }
+  // 4. Sin número: NIT + valor único dentro de la tolerancia
+  for(const g of pending){
+    const c=(byNit.get(g.nit)||[]).filter(d=>!used.has(d)&&Math.abs(d.total-g.total)<=tol);
+    if(c.length===1){used.add(c[0]);out.push(compare(c[0],g,"Cruzada por NIT y valor: el número de factura no aparece en el detalle del ERP. Verificar. "));continue}
+    out.push(mk("erp",null,g,(g.total<0?"Valor negativo: posible pago, recaudo o nota crédito sin documento electrónico. ":"No existe en la DIAN para este NIT. Revisar soporte o deducibilidad. ")
+      +(g.text?"Detalle: "+g.text.slice(0,90):"")));
+  }
+  for(const d of dian) if(!used.has(d)) out.push(mk("dian",d,null,dNotes(d)+"No está registrada en el ERP"));
+  $("auxInfo").textContent=`${groups.length} comprobantes con cuenta por ${rec?"pagar":"cobrar"} reconstruidos · ${skipped} líneas excluidas por tipo de documento.`;
+}
+function mk(st,d,e,obs){
+  return {st,nit:(d||e).nit,nom:(d&&d.nom)||(e&&e.nom)||"",doc:d?d.doc:(e.doc||"—"),comp:(e&&e.comp)||"",fD:d&&d.fecha,fE:e&&e.fecha,
+    tD:d?d.total:null,tE:e?e.total:null,iD:d?d.iva:null,iE:e&&e.hasIva?e.iva:null,obs};
+}
+
+/* ---------- render ---------- */
+function render(){
+  const tiles=["all",...Object.keys(STATES)].map(k=>{
+    const rs=k==="all"?results:results.filter(r=>r.st===k);
+    const v=rs.reduce((s,r)=>s+(r.tD??r.tE??0),0);
+    const s=STATES[k]||{l:"Todos",c:""};
+    return `<button class="tile ${s.c}" style="${k==="all"?"--c:var(--accent);--cb:var(--accent-soft)":""}" data-k="${k}" aria-pressed="${filter===k}">
+      <span class="l">${s.l}</span><span class="n">${rs.length}</span><span class="v">$ ${fmt(v)}</span></button>`}).join("");
+  $("tiles").innerHTML=tiles;
+  $("tiles").querySelectorAll(".tile").forEach(b=>b.onclick=()=>{filter=b.dataset.k;render()});
+  const q=norm($("q").value);
+  const rows=view(q);
+  const esc=s=>String(s??"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+  $("tb").innerHTML=rows.length?rows.map(r=>{
+    const dT=r.tD!=null&&r.tE!=null?r.tE-r.tD:null, dI=r.iD!=null&&r.iE!=null?r.iE-r.iD:null;
+    return `<tr><td><span class="pill ${STATES[r.st].c}">${STATES[r.st].l}</span></td>
+    <td class="mono">${r.nit}</td><td>${esc(r.nom)}</td><td class="mono">${esc(r.doc)}</td><td class="mono">${esc(r.comp||"—")}</td>
+    <td class="mono">${fmtD(r.fD)}</td><td class="mono">${fmtD(r.fE)}</td>
+    <td class="num">${fmt(r.tD)}</td><td class="num">${fmt(r.tE)}</td><td class="num ${dT&&Math.abs(dT)>(+$("tol").value||0)?"diff":""}">${dT==null?"—":fmt(dT)}</td>
+    <td class="num">${fmt(r.iD)}</td><td class="num">${fmt(r.iE)}</td><td class="num ${dI&&Math.abs(dI)>(+$("tol").value||0)?"diff":""}">${dI==null?"—":fmt(dI)}</td>
+    <td class="wrapc">${esc(r.obs)}</td></tr>`}).join(""):`<tr><td colspan="14" class="note" style="padding:24px">Sin documentos en este filtro.</td></tr>`;
+}
+function view(q){return results.filter(r=>(filter==="all"||r.st===filter)&&(!q||norm(r.nit+" "+r.nom+" "+r.doc).includes(q)))}
+
+/* ---------- eventos ---------- */
+function setMode(m){mode=m;$("mRec").setAttribute("aria-pressed",m==="rec");$("mEmi").setAttribute("aria-pressed",m==="emi");reconcile()}
+$("mRec").onclick=()=>setMode("rec");$("mEmi").onclick=()=>setMode("emi");
+["aCxp","aCxc","aIva","aRetC","aRetV"].forEach(id=>$(id).onchange=reconcile);
+$("run").onclick=reconcile;$("baseDian").onchange=reconcile;$("q").oninput=render;$("tol").onchange=reconcile;$("cmpField").onchange=reconcile;
+
+function wireDrop(zone,input,handler){
+  zone.addEventListener("dragover",e=>{e.preventDefault();zone.classList.add("over")});
+  zone.addEventListener("dragleave",()=>zone.classList.remove("over"));
+  zone.addEventListener("drop",e=>{e.preventDefault();zone.classList.remove("over");if(e.dataTransfer.files[0])handler(e.dataTransfer.files[0])});
+  zone.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();input.click()}});
+  input.onchange=()=>input.files[0]&&handler(input.files[0]);
+}
+wireDrop($("dDian"),$("iDian"),async f=>{
+  try{const t=sheetToTable(await readFile(f),r=>r.some(c=>/cufe|cude/.test(c))?10+r.filter(Boolean).length:0);
+    if(!t)throw new Error("No se encontró la columna CUFE/CUDE. Verifica que sea el Excel exportado de la DIAN.");
+    dianRows=parseDian(t);
+    const nE=dianRows.filter(d=>d.grupo==="emi").length,nR=dianRows.filter(d=>d.grupo==="rec").length;
+    if(nE||nR){mode=nE>nR?"emi":"rec";$("mRec").setAttribute("aria-pressed",mode==="rec");$("mEmi").setAttribute("aria-pressed",mode==="emi")}$("fDian").textContent=`${f.name} · ${dianRows.length} documentos`;$("fDian").classList.add("loaded");
+    $("sampleTag").hidden=true;reconcile();}catch(err){toast(err.message)}
+});
+wireDrop($("dErp"),$("iErp"),async f=>{
+  try{const t=sheetToTable(await readFile(f),r=>{const n=r.filter(c=>c&&isNaN(c)).length;return n>=3?n:0});
+    if(!t)throw new Error("No se encontraron encabezados en el archivo del ERP.");
+    erpHeaders=t.headers;erpRows=t.rows;erpKind=detectKind(erpHeaders);autoMap();$("fErp").textContent=`${f.name} · ${erpRows.length} líneas`;$("fErp").classList.add("loaded");
+    $("sampleTag").hidden=true;reconcile();}catch(err){toast(err.message)}
+});
+
+$("copy").onclick=async()=>{
+  const rows=view(norm($("q").value));
+  const head=["Estado","NIT","Tercero","Factura","Comprobante ERP","Fecha DIAN","Fecha ERP","Total DIAN","Total ERP","Dif total","IVA DIAN","IVA ERP","Dif IVA","Observación"];
+  const tsv=[head,...rows.map(r=>[STATES[r.st].l,r.nit,r.nom,r.doc,r.comp,fmtD(r.fD),fmtD(r.fE),r.tD??"",r.tE??"",
+    r.tD!=null&&r.tE!=null?r.tE-r.tD:"",r.iD??"",r.iE??"",r.iD!=null&&r.iE!=null?r.iE-r.iD:"",r.obs])].map(a=>a.join("\t")).join("\n");
+  try{await navigator.clipboard.writeText(tsv);toast(`${rows.length} filas copiadas. Pégalas en Excel.`)}
+  catch{toast("No se pudo copiar. Selecciona la tabla y usa Ctrl+C.")}
+};
+let tt;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3500)}
+
+/* ---------- datos de ejemplo ---------- */
+(function sample(){
+  const D=(d)=>new Date(Date.UTC(2026,8,d));
+  const dian=[
+    ["Factura electrónica","FE",1201,"900123456","Distribuidora Andina SAS",1190000,190000,D(2)],
+    ["Factura electrónica","FE",1202,"900123456","Distribuidora Andina SAS",595000,95000,D(5)],
+    ["Factura electrónica","SETT",88,"830045678","Servicios Técnicos del Norte Ltda",2380000,380000,D(8)],
+    ["Factura electrónica","FV",15433,"860001234","Papelería Central SA",357000,57000,D(10)],
+    ["Factura electrónica","FV",15501,"860001234","Papelería Central SA",142800,22800,D(18)],
+    ["Nota crédito electrónica","NC",44,"900123456","Distribuidora Andina SAS",119000,19000,D(12)],
+    ["Factura electrónica","ELEC",9001,"901555222","Energía Bogotá ESP",845000,0,D(15)],
+    ["Factura electrónica","FE",3005,"800987654","Transportes La Sabana SAS",1500000,0,D(20)],
+    ["Factura electrónica","FE",3005,"800987654","Transportes La Sabana SAS",1500000,0,D(20)],
+    ["Application response","FE",1201,"900123456","Distribuidora Andina SAS",0,0,D(3)],
+    ["Factura electrónica","HN",77,"901222333","Honorarios Pérez y Asociados SAS",4760000,760000,D(25)],
+    ["Factura electrónica","EX",310,"444000111","Cloud Tools Inc",1250,0,D(27)],
+  ];
+  dianRows=dian.filter(r=>!/application/i.test(r[0])).map((r,i)=>{const s=/credito/.test(norm(r[0]))?-1:1;
+    return {tipo:r[0],cufe:i===8?"cufe-7":"cufe-"+i,doc:r[1]+r[2],fecha:r[7],nitE:r[3],nomE:r[4],nitR:"901777888",nomR:"Trinomio SAS",total:r[5]*s,iva:r[6]*s,estado:"Aprobado",grupo:"rec",divisa:r[1]==="EX"?"USD":"COP",inc:0,rete:r[1]==="HN"?(400000+114000):0}});
+  erpHeaders=["AÑO","PERIODO","FECHA DE DOCUMENTO","SUB TIPO DOCUMENTO","TIPO DE DOCUMENTO","NUMERO DE DOCUMENTO","CUENTA CONTABLE","NOMBRE DE LA CUENTA","CODIGO SUCURSAL","NOMBRE SUCURSAL","CODIGO CENTRO DE COSTO","NOMBRE CENTRO DE COSTO","CODIGO SUBCENTRO DE COSTO","NOMBRE SUBCENTRO DE COSTO","CODIGO OFICINA","NOMBRE DE LA OFICINA","CODIGO TERCERO","NOMBRE DEL TERCERO","DETALLE DEL DOCUMENTO","BASE MOVIMIENTO","DEBITO","CREDITO","MODULO","USUARIO RESPONSABLE","TASA","DESCRIPCION DEL DOCUMENTO","FECHA TRASLADO CNT"];
+  const SUB={FC:"CAUSACION FACTURA COMPRA",NP:"NOTA CREDITO PROVEEDOR",CE:"COMPROBANTE DE EGRESO"};
+  const A=(f,t,n,ter,nom,det,lines)=>lines.map(([c,nc,dB,cR,base])=>[2026,9,f,SUB[t],t,n,c,nc,"01","PRINCIPAL","10","ADMINISTRACION","","","01","BOGOTA",ter,nom,det,base||0,dB,cR,t==="CE"?"TES":"CXP","AUXCONT","",det,f]);
+  const e=[
+    ...A("2026-09-02","FC",501,"900123456","DISTRIBUIDORA ANDINA SAS","COMPRA MERCANCIA FE-1201",[["14350501","MERCANCIAS",1000000,0],["24080201","IVA DESCONTABLE",190000,0,1000000],["23654001","RETEFUENTE COMPRAS",0,25000,1000000],["22050501","PROVEEDORES NACIONALES",0,1165000]]),
+    ...A("2026-09-05","FC",502,"900123456","DISTRIBUIDORA ANDINA SAS","FACT FE 1202 SUMINISTROS",[["51953001","UTILES Y PAPELERIA",500000,0],["24080201","IVA DESCONTABLE",95000,0,500000],["22050501","PROVEEDORES NACIONALES",0,595000]]),
+    ...A("2026-09-08","FC",510,"8300456781","SERVICIOS TECNICOS DEL NORTE LTDA","SETT88 MANTENIMIENTO EQUIPOS",[["51451501","MANTENIMIENTO",2000000,0],["24080201","IVA DESCONTABLE",380000,0,2000000],["23652501","RETEFUENTE SERVICIOS",0,80000,2000000],["23670101","RETEIVA",0,57000,380000],["22050501","PROVEEDORES NACIONALES",0,2243000]]),
+    ...A("2026-09-10","FC",515,"860001234","PAPELERIA CENTRAL SA","FV15433 PAPELERIA",[["51953001","UTILES Y PAPELERIA",318000,0],["24080201","IVA DESCONTABLE",57000,0,300000],["22050501","PROVEEDORES NACIONALES",0,375000]]),
+    ...A("2026-09-12","NP",44,"900123456","DISTRIBUIDORA ANDINA SAS","DEVOLUCION NC44",[["22050501","PROVEEDORES NACIONALES",119000,0],["24080201","IVA DESCONTABLE",0,19000,100000],["14350501","MERCANCIAS",0,100000]]),
+    ...A("2026-09-20","FC",530,"800987654","TRANSPORTES LA SABANA SAS","FLETE SEPTIEMBRE",[["51355001","TRANSPORTE Y FLETES",1500000,0],["22050501","PROVEEDORES NACIONALES",0,1500000]]),
+    ...A("2026-09-22","FC",540,"901333444","FERRETERIA EL TORNILLO","FE-552 HERRAMIENTAS",[["51959501","OTROS GASTOS",420000,0],["24080201","IVA DESCONTABLE",79800,0,420000],["22050501","PROVEEDORES NACIONALES",0,499800]]),
+    ...A("2026-09-25","FC",541,"901222333","HONORARIOS PEREZ Y ASOCIADOS SAS","HN-77 HONORARIOS ASESORIA",[["51102501","HONORARIOS ASESORIA",4000000,0],["24080201","IVA DESCONTABLE",760000,0,4000000],["23651501","RETEFUENTE HONORARIOS",0,440000,4000000],["23670101","RETEIVA",0,114000,760000],["22050501","PROVEEDORES NACIONALES",0,4206000]]),
+    ...A("2026-09-28","CE",900,"900123456","DISTRIBUIDORA ANDINA SAS","PAGO FE-1202",[["22050501","PROVEEDORES NACIONALES",595000,0],["11100501","BANCO",0,595000]]),
+  ];
+  erpRows=e.map(r=>Object.fromEntries(erpHeaders.map((h,i)=>[h,r[i]])));
+  erpKind=detectKind(erpHeaders);
+  autoMap();reconcile();
+})();
+
+/* ---------- descarga a Excel (funciona en el sitio publicado) ---------- */
+$("xls").onclick=()=>{
+  const rows=view(norm($("q").value));
+  if(!rows.length){toast("No hay filas para descargar en este filtro.");return}
+  const dif=(a,b)=>a!=null&&b!=null?b-a:null;
+  const det=rows.map(r=>({"Estado":STATES[r.st].l,"NIT":r.nit,"Tercero":r.nom,"Factura":r.doc,"Comprobante ERP":r.comp,
+    "Fecha DIAN":fmtD(r.fD),"Fecha ERP":fmtD(r.fE),"Total DIAN":r.tD,"Total ERP":r.tE,"Dif. total":dif(r.tD,r.tE),
+    "IVA DIAN":r.iD,"IVA ERP":r.iE,"Dif. IVA":dif(r.iD,r.iE),"Observación":r.obs}));
+  const res=Object.keys(STATES).map(k=>{const rs=results.filter(r=>r.st===k);
+    return {"Estado":STATES[k].l,"Documentos":rs.length,"Valor":rs.reduce((s,r)=>s+(r.tD??r.tE??0),0)}});
+  const wb=XLSX.utils.book_new();
+  const w1=XLSX.utils.json_to_sheet(res), w2=XLSX.utils.json_to_sheet(det);
+  w1["!cols"]=[{wch:22},{wch:12},{wch:16}];
+  w2["!cols"]=[{wch:20},{wch:12},{wch:34},{wch:12},{wch:14},{wch:11},{wch:11},{wch:14},{wch:14},{wch:12},{wch:12},{wch:12},{wch:10},{wch:60}];
+  XLSX.utils.book_append_sheet(wb,w1,"Resumen");
+  XLSX.utils.book_append_sheet(wb,w2,"Detalle");
+  XLSX.writeFile(wb,`conciliacion-dian-${mode==="rec"?"compras":"ventas"}-${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast(`Excel descargado con ${rows.length} documentos.`);
+};
+
+</script>
+</body>
+</html>
