@@ -49,10 +49,16 @@
         .cdian .seg button[aria-pressed=true]{background:var(--accent);color:#fff;font-weight:600}
         .cdian .cd-btn{font:inherit;font-weight:600;font-size:14px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:8px;padding:9px 16px;cursor:pointer;display:inline-flex;gap:.45rem;align-items:center}
         .cdian .cd-btn:hover{background:var(--verde-oscuro)}
+        .cdian .cd-btn:disabled{opacity:.45;cursor:not-allowed;background:var(--accent)}
+        .cdian .cd-btn.busy{opacity:1;cursor:progress}
+        .cdian .run-msg{margin:0}
+        .cdian .run-msg.ready{color:var(--ok);font-weight:600}
+        .cdian .empty{border:1.5px dashed var(--line);border-radius:10px;padding:2.2rem 1rem;display:grid;gap:.4rem;justify-items:center;text-align:center;color:var(--muted)}
+        .cdian .empty i{font-size:2rem;color:var(--linea)}
+        .cdian .empty strong{font-family:var(--f-titulo);color:var(--fg);font-size:1rem}
         .cdian .cd-btn.ghost{background:transparent;color:var(--accent-2);border-color:var(--accent-2)}
         .cdian .cd-btn.ghost:hover{background:#e3f1f6}
         .cdian .note{font-size:12.5px;color:var(--muted)}
-        .cdian .sample{font-size:12px;background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:6px 10px}
         .cdian .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
         .cdian .tile{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:2px;cursor:pointer;background:#fff;text-align:left;font:inherit;color:inherit;border-left:4px solid var(--c)}
         .cdian .tile[aria-pressed=true]{background:var(--cb)}
@@ -143,21 +149,20 @@
   <section class="panel">
     <div class="row" style="justify-content:space-between">
       <h2>1. Cargar archivos</h2>
-      <span class="sample" id="sampleTag">Datos de ejemplo cargados. Sube tus archivos para reemplazarlos.</span>
     </div>
     <div class="grid2">
       <label class="drop" id="dDian" tabindex="0">
         <span class="eyebrow">Archivo DIAN</span>
         <strong>Excel de documentos recibidos/emitidos</strong>
         <span class="note">Descárgalo en catalogo-vpfe.dian.gov.co → Documentos → Recibidos o Enviados → Exportar a Excel.</span>
-        <span class="file" id="fDian">Ningún archivo · usando ejemplo</span>
+        <span class="file" id="fDian">Ningún archivo cargado</span>
         <input type="file" id="iDian" accept=".xlsx,.xls,.csv">
       </label>
       <label class="drop" id="dErp" tabindex="0">
         <span class="eyebrow">Archivo ERP</span>
         <strong>Auxiliar contable o listado de facturas</strong>
         <span class="note">Auxiliar por movimientos (cuenta, débito, crédito, tercero, detalle) de todas las cuentas del periodo, o un listado de facturas con NIT, número y valores.</span>
-        <span class="file" id="fErp">Ningún archivo · usando ejemplo</span>
+        <span class="file" id="fErp">Ningún archivo cargado</span>
         <input type="file" id="iErp" accept=".xlsx,.xls,.csv">
       </label>
     </div>
@@ -166,9 +171,9 @@
   <section class="panel">
     <div class="row" style="justify-content:space-between">
       <h2>2. Configuración del ERP</h2>
-      <span class="pill s-ok" id="kindLbl"></span>
+      <span class="pill s-ok" id="kindLbl" hidden></span>
     </div>
-    <p class="note" style="margin:0">Las columnas se detectaron automáticamente. Corrige las que no correspondan. El archivo DIAN se lee con su formato estándar.</p>
+    <p class="note" style="margin:0" id="mapNote">Carga el archivo del ERP para ver sus columnas.</p>
     <div class="map" id="map"></div>
     <div id="auxCfg" class="cfg" hidden>
       <div class="cfgh"><span class="eyebrow">Cuentas PUC</span><span class="note">Prefijos separados por coma. Cada factura se reconstruye como cuenta por pagar (o cobrar) más retenciones.</span></div>
@@ -191,24 +196,32 @@
       <label class="f" id="listCfg">Total DIAN a comparar
         <select id="baseDian"><option value="bruto" selected>Total factura</option><option value="neto">Total menos Rete IVA, Renta e ICA</option></select>
       </label>
-      <button class="cd-btn" id="run">Conciliar</button>
+      <button class="cd-btn" id="run" disabled><i class="fas fa-play"></i> Conciliar</button>
     </div>
+    <p class="note run-msg" id="runMsg" aria-live="polite">Carga el archivo DIAN y el archivo del ERP para conciliar.</p>
   </section>
 
   <section class="panel" id="res">
     <div class="row" style="justify-content:space-between">
       <h2>3. Resultado</h2>
-      <div class="row">
+      <div class="row" id="resTools" hidden>
         <input type="search" id="q" placeholder="Buscar NIT, nombre o factura" aria-label="Buscar">
         <button class="cd-btn ghost" id="copy"><i class="far fa-copy"></i> Copiar</button>
         <button class="cd-btn" id="xls"><i class="fas fa-file-excel"></i> Descargar Excel</button>
       </div>
     </div>
+    <div class="empty" id="emptyRes">
+      <i class="fas fa-file-import"></i>
+      <strong id="emptyTitle">Aún no hay resultados</strong>
+      <span id="emptyText">Carga los dos archivos y pulsa Conciliar. Aquí verás cada documento clasificado por estado.</span>
+    </div>
+    <div id="resWrap" hidden style="display:grid;gap:14px">
     <div class="tiles" id="tiles"></div>
     <div class="tbl"><table><thead><tr>
       <th>Estado</th><th>NIT</th><th>Tercero</th><th>Factura</th><th>Comprobante ERP</th><th>Fecha DIAN</th><th>Fecha ERP</th>
       <th>Total DIAN</th><th>Total ERP</th><th>Dif. total</th><th>IVA DIAN</th><th>IVA ERP</th><th>Dif. IVA</th><th>Observación</th>
     </tr></thead><tbody id="tb"></tbody></table></div>
+    </div>
     <details>
       <summary>Cómo se cruzan los documentos</summary>
       <ul class="note">
@@ -416,13 +429,17 @@ function compare(d,e,extra){
   obs+=dNotes(d);
   return mk(badT||badI||/rechaz/i.test(d.estado)?"dif":"ok",d,e,obs.trim());
 }
-function reconcile(){
-  if(!dianRows||!erpRows)return;
+let hasRun=false;
+/* Los cambios de configuración recalculan solo si ya se concilió una vez */
+function reconcile(){ if(hasRun)runNow(); }
+function runNow(){
+  if(!dianRows||!erpRows)return false;
   const out=[];
-  if((erpKind==="aux"?reconcileAux(out):reconcileList(out))===false)return;
+  if((erpKind==="aux"?reconcileAux(out):reconcileList(out))===false)return false;
   const order={dian:0,erp:1,dif:2,dup:3,ok:4};
   results=out.sort((a,b)=>order[a.st]-order[b.st]||a.nit.localeCompare(b.nit));
   render();
+  return true;
 }
 
 function reconcileList(out){
@@ -550,14 +567,14 @@ function view(q){return results.filter(r=>(filter==="all"||r.st===filter)&&(!q||
 function setMode(m){mode=m;$("mRec").setAttribute("aria-pressed",m==="rec");$("mEmi").setAttribute("aria-pressed",m==="emi");reconcile()}
 $("mRec").onclick=()=>setMode("rec");$("mEmi").onclick=()=>setMode("emi");
 ["aCxp","aCxc","aIva","aRetC","aRetV"].forEach(id=>$(id).onchange=reconcile);
-$("run").onclick=reconcile;$("baseDian").onchange=reconcile;$("q").oninput=render;$("tol").onchange=reconcile;$("cmpField").onchange=reconcile;
+$("run").onclick=runClick;$("baseDian").onchange=reconcile;$("q").oninput=render;$("tol").onchange=reconcile;$("cmpField").onchange=reconcile;
 
 function wireDrop(zone,input,handler){
   zone.addEventListener("dragover",e=>{e.preventDefault();zone.classList.add("over")});
   zone.addEventListener("dragleave",()=>zone.classList.remove("over"));
   zone.addEventListener("drop",e=>{e.preventDefault();zone.classList.remove("over");if(e.dataTransfer.files[0])handler(e.dataTransfer.files[0])});
   zone.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();input.click()}});
-  input.onchange=()=>input.files[0]&&handler(input.files[0]);
+  input.onchange=()=>{const f=input.files[0];input.value="";if(f)handler(f)};
 }
 wireDrop($("dDian"),$("iDian"),async f=>{
   try{const t=sheetToTable(await readFile(f),r=>r.some(c=>/cufe|cude/.test(c))?10+r.filter(Boolean).length:0);
@@ -565,13 +582,13 @@ wireDrop($("dDian"),$("iDian"),async f=>{
     dianRows=parseDian(t);
     const nE=dianRows.filter(d=>d.grupo==="emi").length,nR=dianRows.filter(d=>d.grupo==="rec").length;
     if(nE||nR){mode=nE>nR?"emi":"rec";$("mRec").setAttribute("aria-pressed",mode==="rec");$("mEmi").setAttribute("aria-pressed",mode==="emi")}$("fDian").textContent=`${f.name} · ${dianRows.length} documentos`;$("fDian").classList.add("loaded");
-    $("sampleTag").hidden=true;reconcile();}catch(err){toast(err.message)}
+    filesChanged();}catch(err){toast(err.message)}
 });
 wireDrop($("dErp"),$("iErp"),async f=>{
   try{const t=sheetToTable(await readFile(f),r=>{const n=r.filter(c=>c&&isNaN(c)).length;return n>=3?n:0});
     if(!t)throw new Error("No se encontraron encabezados en el archivo del ERP.");
     erpHeaders=t.headers;erpRows=t.rows;erpKind=detectKind(erpHeaders);autoMap();$("fErp").textContent=`${f.name} · ${erpRows.length} líneas`;$("fErp").classList.add("loaded");
-    $("sampleTag").hidden=true;reconcile();}catch(err){toast(err.message)}
+    $("kindLbl").hidden=false;$("mapNote").textContent="Las columnas se detectaron automáticamente. Corrige las que no correspondan. El archivo DIAN se lee con su formato estándar.";filesChanged();}catch(err){toast(err.message)}
 });
 
 $("copy").onclick=async()=>{
@@ -584,43 +601,49 @@ $("copy").onclick=async()=>{
 };
 let tt;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3500)}
 
-/* ---------- datos de ejemplo ---------- */
-(function sample(){
-  const D=(d)=>new Date(Date.UTC(2026,8,d));
-  const dian=[
-    ["Factura electrónica","FE",1201,"900123456","Distribuidora Andina SAS",1190000,190000,D(2)],
-    ["Factura electrónica","FE",1202,"900123456","Distribuidora Andina SAS",595000,95000,D(5)],
-    ["Factura electrónica","SETT",88,"830045678","Servicios Técnicos del Norte Ltda",2380000,380000,D(8)],
-    ["Factura electrónica","FV",15433,"860001234","Papelería Central SA",357000,57000,D(10)],
-    ["Factura electrónica","FV",15501,"860001234","Papelería Central SA",142800,22800,D(18)],
-    ["Nota crédito electrónica","NC",44,"900123456","Distribuidora Andina SAS",119000,19000,D(12)],
-    ["Factura electrónica","ELEC",9001,"901555222","Energía Bogotá ESP",845000,0,D(15)],
-    ["Factura electrónica","FE",3005,"800987654","Transportes La Sabana SAS",1500000,0,D(20)],
-    ["Factura electrónica","FE",3005,"800987654","Transportes La Sabana SAS",1500000,0,D(20)],
-    ["Application response","FE",1201,"900123456","Distribuidora Andina SAS",0,0,D(3)],
-    ["Factura electrónica","HN",77,"901222333","Honorarios Pérez y Asociados SAS",4760000,760000,D(25)],
-    ["Factura electrónica","EX",310,"444000111","Cloud Tools Inc",1250,0,D(27)],
-  ];
-  dianRows=dian.filter(r=>!/application/i.test(r[0])).map((r,i)=>{const s=/credito/.test(norm(r[0]))?-1:1;
-    return {tipo:r[0],cufe:i===8?"cufe-7":"cufe-"+i,doc:r[1]+r[2],fecha:r[7],nitE:r[3],nomE:r[4],nitR:"901777888",nomR:"Trinomio SAS",total:r[5]*s,iva:r[6]*s,estado:"Aprobado",grupo:"rec",divisa:r[1]==="EX"?"USD":"COP",inc:0,rete:r[1]==="HN"?(400000+114000):0}});
-  erpHeaders=["AÑO","PERIODO","FECHA DE DOCUMENTO","SUB TIPO DOCUMENTO","TIPO DE DOCUMENTO","NUMERO DE DOCUMENTO","CUENTA CONTABLE","NOMBRE DE LA CUENTA","CODIGO SUCURSAL","NOMBRE SUCURSAL","CODIGO CENTRO DE COSTO","NOMBRE CENTRO DE COSTO","CODIGO SUBCENTRO DE COSTO","NOMBRE SUBCENTRO DE COSTO","CODIGO OFICINA","NOMBRE DE LA OFICINA","CODIGO TERCERO","NOMBRE DEL TERCERO","DETALLE DEL DOCUMENTO","BASE MOVIMIENTO","DEBITO","CREDITO","MODULO","USUARIO RESPONSABLE","TASA","DESCRIPCION DEL DOCUMENTO","FECHA TRASLADO CNT"];
-  const SUB={FC:"CAUSACION FACTURA COMPRA",NP:"NOTA CREDITO PROVEEDOR",CE:"COMPROBANTE DE EGRESO"};
-  const A=(f,t,n,ter,nom,det,lines)=>lines.map(([c,nc,dB,cR,base])=>[2026,9,f,SUB[t],t,n,c,nc,"01","PRINCIPAL","10","ADMINISTRACION","","","01","BOGOTA",ter,nom,det,base||0,dB,cR,t==="CE"?"TES":"CXP","AUXCONT","",det,f]);
-  const e=[
-    ...A("2026-09-02","FC",501,"900123456","DISTRIBUIDORA ANDINA SAS","COMPRA MERCANCIA FE-1201",[["14350501","MERCANCIAS",1000000,0],["24080201","IVA DESCONTABLE",190000,0,1000000],["23654001","RETEFUENTE COMPRAS",0,25000,1000000],["22050501","PROVEEDORES NACIONALES",0,1165000]]),
-    ...A("2026-09-05","FC",502,"900123456","DISTRIBUIDORA ANDINA SAS","FACT FE 1202 SUMINISTROS",[["51953001","UTILES Y PAPELERIA",500000,0],["24080201","IVA DESCONTABLE",95000,0,500000],["22050501","PROVEEDORES NACIONALES",0,595000]]),
-    ...A("2026-09-08","FC",510,"8300456781","SERVICIOS TECNICOS DEL NORTE LTDA","SETT88 MANTENIMIENTO EQUIPOS",[["51451501","MANTENIMIENTO",2000000,0],["24080201","IVA DESCONTABLE",380000,0,2000000],["23652501","RETEFUENTE SERVICIOS",0,80000,2000000],["23670101","RETEIVA",0,57000,380000],["22050501","PROVEEDORES NACIONALES",0,2243000]]),
-    ...A("2026-09-10","FC",515,"860001234","PAPELERIA CENTRAL SA","FV15433 PAPELERIA",[["51953001","UTILES Y PAPELERIA",318000,0],["24080201","IVA DESCONTABLE",57000,0,300000],["22050501","PROVEEDORES NACIONALES",0,375000]]),
-    ...A("2026-09-12","NP",44,"900123456","DISTRIBUIDORA ANDINA SAS","DEVOLUCION NC44",[["22050501","PROVEEDORES NACIONALES",119000,0],["24080201","IVA DESCONTABLE",0,19000,100000],["14350501","MERCANCIAS",0,100000]]),
-    ...A("2026-09-20","FC",530,"800987654","TRANSPORTES LA SABANA SAS","FLETE SEPTIEMBRE",[["51355001","TRANSPORTE Y FLETES",1500000,0],["22050501","PROVEEDORES NACIONALES",0,1500000]]),
-    ...A("2026-09-22","FC",540,"901333444","FERRETERIA EL TORNILLO","FE-552 HERRAMIENTAS",[["51959501","OTROS GASTOS",420000,0],["24080201","IVA DESCONTABLE",79800,0,420000],["22050501","PROVEEDORES NACIONALES",0,499800]]),
-    ...A("2026-09-25","FC",541,"901222333","HONORARIOS PEREZ Y ASOCIADOS SAS","HN-77 HONORARIOS ASESORIA",[["51102501","HONORARIOS ASESORIA",4000000,0],["24080201","IVA DESCONTABLE",760000,0,4000000],["23651501","RETEFUENTE HONORARIOS",0,440000,4000000],["23670101","RETEIVA",0,114000,760000],["22050501","PROVEEDORES NACIONALES",0,4206000]]),
-    ...A("2026-09-28","CE",900,"900123456","DISTRIBUIDORA ANDINA SAS","PAGO FE-1202",[["22050501","PROVEEDORES NACIONALES",595000,0],["11100501","BANCO",0,595000]]),
-  ];
-  erpRows=e.map(r=>Object.fromEntries(erpHeaders.map((h,i)=>[h,r[i]])));
-  erpKind=detectKind(erpHeaders);
-  autoMap();reconcile();
-})();
+/* ---------- flujo del botón Conciliar ---------- */
+function filesChanged(){
+  const both=!!(dianRows&&erpRows);
+  hasRun=false; results=[];
+  $("resWrap").hidden=true; $("resTools").hidden=true; $("emptyRes").hidden=false;
+  $("run").disabled=!both;
+  const m=$("runMsg"); m.classList.toggle("ready",both);
+  if(both){
+    m.textContent=`Listo para conciliar: ${dianRows.length} documentos DIAN y ${erpRows.length} líneas del ERP. Revisa la configuración y pulsa Conciliar.`;
+    $("emptyTitle").textContent="Archivos cargados";
+    $("emptyText").textContent="Pulsa Conciliar para ver los resultados.";
+  } else {
+    m.textContent=dianRows?"Falta el archivo del ERP.":erpRows?"Falta el archivo DIAN.":"Carga el archivo DIAN y el archivo del ERP para conciliar.";
+  }
+}
+function runClick(){
+  if(!dianRows||!erpRows){toast("Carga el archivo DIAN y el del ERP.");return}
+  const b=$("run"), m=$("runMsg");
+  b.disabled=true; b.classList.add("busy");
+  b.innerHTML='<i class="fas fa-spinner fa-spin"></i> Procesando…';
+  m.classList.remove("ready");
+  m.textContent=`Procesando ${dianRows.length} documentos DIAN contra ${erpRows.length} líneas del ERP…`;
+  $("emptyTitle").textContent="Procesando…"; $("emptyText").textContent="Cruzando los documentos de la DIAN con el ERP.";
+  const t0=performance.now();
+  // Se espera un momento para que el navegador pinte el estado "Procesando" antes del cálculo
+  setTimeout(()=>{
+    let ok=false;
+    try{ ok=runNow()!==false }catch(err){ toast("Error al conciliar: "+err.message) }
+    const fin=()=>{
+      b.disabled=false; b.classList.remove("busy");
+      b.innerHTML='<i class="fas fa-play"></i> Conciliar';
+      if(!ok){ m.textContent="No se pudo conciliar. Revisa las columnas marcadas con * en la configuración."; $("emptyTitle").textContent="Archivos cargados"; $("emptyText").textContent="Pulsa Conciliar para ver los resultados."; return }
+      hasRun=true;
+      $("emptyRes").hidden=true; $("resWrap").hidden=false; $("resTools").hidden=false;
+      const n=k=>results.filter(r=>r.st===k).length;
+      m.classList.add("ready");
+      m.textContent=`Conciliación terminada: ${results.length} documentos · ${n("ok")} conciliados · ${n("dif")+n("dian")+n("erp")+n("dup")} por revisar.`;
+      $("res").scrollIntoView({behavior:"smooth",block:"start"});
+    };
+    // Mantiene el aviso visible al menos medio segundo para que se note
+    setTimeout(fin,Math.max(0,500-(performance.now()-t0)));
+  },50);
+}
 
 /* ---------- descarga a Excel (funciona en el sitio publicado) ---------- */
 $("xls").onclick=()=>{
