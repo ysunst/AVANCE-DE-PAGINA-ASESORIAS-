@@ -79,6 +79,15 @@
         .cdian .disclaimer{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;margin:0}
         .cdian details summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--teal)}
         .cdian details ul{margin:.5rem 0 0 1.1rem;display:grid;gap:.3rem}
+        .cdian .trx{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+        .cdian .trx-panel{flex-basis:100%;display:grid;gap:12px;border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--gris-card)}
+        .cdian .trx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+        .cdian .trx-col{display:grid;gap:6px;min-width:0;align-content:start}
+        .cdian .trx-col .tbl{max-height:340px;background:#fff}
+        .cdian .tr-sub{font-family:var(--f-texto);font-size:11px;color:var(--muted);white-space:normal;max-width:240px}
+        .cdian .tr-ter{max-width:200px;overflow:hidden;text-overflow:ellipsis}
+        .cdian .kbd{font-family:var(--mono);font-size:12px;background:#fff;border:1px solid var(--line);border-radius:4px;padding:0 5px}
+        .cdian .m-ok{color:var(--ok);font-weight:600} .cdian .m-fol{color:var(--warn);font-weight:600} .cdian .m-no{color:var(--bad);font-weight:600}
         .cdian .cfg{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:14px}
         .cdian .cfgh{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
         .cdian .types{display:flex;flex-wrap:wrap;gap:8px}
@@ -175,14 +184,34 @@
     </div>
     <p class="note" style="margin:0" id="mapNote">Carga el archivo del ERP para ver sus columnas.</p>
     <div class="map" id="map"></div>
+    <div class="trx" id="trxWrap" hidden>
+      <button type="button" class="cd-btn ghost" id="trxBtn" aria-expanded="false" aria-controls="trxPanel"><i class="fas fa-exchange-alt"></i> Ver transformación de números</button>
+      <span class="note" id="trxSum"></span>
+      <div id="trxPanel" class="trx-panel" hidden>
+        <p class="note" style="margin:0">La DIAN separa <b>Prefijo</b> y <b>Folio</b>; el ERP trae el número completo. Las dos fuentes se convierten a la misma llave: prefijo + folio sin espacios, guiones ni ceros a la izquierda. Ejemplo: <span class="kbd">DS</span> + <span class="kbd">20284</span> = <span class="kbd">DS20284</span> = <span class="kbd">DS-0020284</span>.</p>
+        <div class="trx-grid">
+          <div class="trx-col">
+            <span class="eyebrow" id="trxErpT">Números del ERP</span>
+            <div class="tbl"><table><thead><tr><th>Valor en el ERP</th><th>Leído de</th><th>Prefijo</th><th>Folio</th><th>Llave</th><th>¿En la DIAN?</th></tr></thead><tbody id="trxErp"></tbody></table></div>
+          </div>
+          <div class="trx-col">
+            <span class="eyebrow">Documentos DIAN</span>
+            <div class="tbl"><table><thead><tr><th>Prefijo</th><th>Folio</th><th>Llave</th><th>Tercero</th><th>¿En el ERP?</th></tr></thead><tbody id="trxDian"></tbody></table></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="auxCfg" class="cfg" hidden>
-      <div class="cfgh"><span class="eyebrow">Cuentas PUC</span><span class="note">Prefijos separados por coma. Cada factura se reconstruye como cuenta por pagar (o cobrar) más retenciones.</span></div>
+      <div class="cfgh"><span class="eyebrow">Cuentas PUC</span><span class="note">Prefijos separados por coma. Cada factura se reconstruye como cuenta por pagar (o cobrar) + retenciones + anticipos aplicados − impuestos asumidos. 2105 cubre las compras pagadas con tarjeta de crédito.</span></div>
       <div class="map">
-        <label class="f">Cuentas por pagar (compras)<input type="text" id="aCxp" value="2205, 2335"></label>
+        <label class="f">Cuentas por pagar (compras)<input type="text" id="aCxp" value="2205, 2335, 2105"></label>
         <label class="f">Cuentas por cobrar (ventas)<input type="text" id="aCxc" value="1305"></label>
         <label class="f">IVA<input type="text" id="aIva" value="2408"></label>
         <label class="f">Retenciones practicadas (compras)<input type="text" id="aRetC" value="2365, 2367, 2368"></label>
         <label class="f">Retenciones que te practican (ventas)<input type="text" id="aRetV" value="1355"></label>
+        <label class="f">Anticipos aplicados (compras)<input type="text" id="aAnt" value="1330"></label>
+        <label class="f">Anticipos recibidos (ventas)<input type="text" id="aAntV" value="2805"></label>
+        <label class="f">Impuestos asumidos (se restan)<input type="text" id="aAsum" value="531520"></label>
       </div>
       <div class="cfgh"><span class="eyebrow">Tipos de documento incluidos</span><span class="note">Desmarca pagos, recibos y demás comprobantes que no causan facturas.</span></div>
       <div class="types" id="types"></div>
@@ -218,14 +247,16 @@
     <div id="resWrap" hidden style="display:grid;gap:14px">
     <div class="tiles" id="tiles"></div>
     <div class="tbl"><table><thead><tr>
-      <th>Estado</th><th>NIT</th><th>Tercero</th><th>Factura</th><th>Comprobante ERP</th><th>Fecha DIAN</th><th>Fecha ERP</th>
+      <th>Estado</th><th>NIT</th><th>Tercero</th><th>Factura DIAN</th><th>Documento ERP</th><th>Fecha DIAN</th><th>Fecha ERP</th>
       <th>Total DIAN</th><th>Total ERP</th><th>Dif. total</th><th>IVA DIAN</th><th>IVA ERP</th><th>Dif. IVA</th><th>Observación</th>
     </tr></thead><tbody id="tb"></tbody></table></div>
     </div>
     <details>
       <summary>Cómo se cruzan los documentos</summary>
       <ul class="note">
-        <li>Llave principal: NIT del tercero (sin dígito de verificación) + prefijo y número de factura, sin espacios ni guiones.</li>
+        <li>Llave principal: NIT del tercero (sin dígito de verificación) + Prefijo y Folio de la DIAN unidos, sin espacios, guiones ni ceros a la izquierda. Así “DS” + “20284” cruza con “DS20284” o “DS-0020284” del ERP.</li>
+        <li>En el auxiliar, el total de cada comprobante es: cuenta por pagar (o cobrar) + retenciones + anticipos aplicados − impuestos asumidos. Así cuadran las facturas que se cruzan contra un anticipo.</li>
+        <li>El documento soporte (DS) lo genera tu empresa: se cruza siempre como compra y contra el NIT del vendedor, aunque la DIAN lo liste en Emitidos.</li>
         <li>Si no hay coincidencia exacta, se intenta con NIT + número sin prefijo ni ceros a la izquierda.</li>
         <li>En el archivo DIAN solo se toman facturas, notas crédito/débito y documentos soporte; los eventos (Application Response) se excluyen.</li>
         <li>Con un auxiliar contable, cada comprobante se reconstruye: total = cuenta por pagar (o cobrar) + retenciones; IVA = cuenta 2408. El número de la factura se busca en el detalle y la descripción del comprobante.</li>
@@ -284,7 +315,26 @@ function num(v){
 }
 function nit(v){ let s=String(v??"").trim(); if(/^\d[\d.\s]*-\s*\d$/.test(s))s=s.split("-")[0]; return s.replace(/\D/g,""); }
 function docKey(v){ return String(v??"").toUpperCase().replace(/[^A-Z0-9]/g,""); }
-function folioOnly(v){ const m=docKey(v).match(/(\d+)$/); return m?String(parseInt(m[1],10)):docKey(v); }
+/* ---------- llave de cruce: Prefijo + Folio ----------
+   La DIAN trae Prefijo y Folio en columnas separadas; el ERP suele traer el número completo.
+   Las dos partes se llevan a la misma llave: letras del prefijo + folio sin ceros a la izquierda.
+   "DS" + "20284" · "DS20284" · "DS-0020284" · "ds 20284"  →  DS20284 */
+const noZeros=d=>String(d).replace(/^0+(?=\d)/,"");
+function splitDoc(v){ const s=docKey(v); const m=s.match(/^([A-Z0-9]*?[A-Z])?(\d+)$/);
+  return m?{pref:m[1]||"",fol:noZeros(m[2])}:{pref:"",fol:s}; }
+// Llave de una celda del ERP: número limpio ("DS20284") o texto que lo contiene ("FACT DS20284")
+function cellKey(raw){ const p=splitDoc(raw);
+  if(/^[A-Z0-9]*?[A-Z]?\d+$/.test(docKey(raw)))return {key:p.pref+p.fol,pref:p.pref,fol:p.fol,keys:erpKeys(raw)};
+  const z=scan(raw), q=splitDoc([...z.keys].pop()||raw);
+  return {key:q.pref+q.fol,pref:q.pref,fol:z.lastFol||q.fol,keys:[...new Set([...erpKeys(raw),...z.keys])]}; }
+function erpKeys(v){ const s=docKey(v); if(!s)return[]; const p=splitDoc(s); return [...new Set([s,p.pref+p.fol])]; }
+function folioOnly(v){ return splitDoc(v).fol; }
+// Lee un texto ("FACT DS-020284 ASEO") y devuelve las llaves completas y los folios que contiene
+function scan(src){ const keys=new Set(), fols=[];
+  const tk=String(src??"").toUpperCase().split(/[^A-Z0-9]+/).filter(Boolean);
+  tk.forEach((t,i)=>{ const c=[t]; if(/^[A-Z]+$/.test(t)&&/^\d+$/.test(tk[i+1]||""))c.push(t+tk[i+1]);
+    c.forEach(x=>{ if(!/\d/.test(x))return; erpKeys(x).forEach(k=>keys.add(k)); fols.push(splitDoc(x).fol); }); });
+  return {keys,fols:new Set(fols),lastFol:fols[fols.length-1]||"",compact:docKey(src)}; }
 function date(v){
   if(v instanceof Date&&!isNaN(v))return v;
   if(typeof v==="number"&&v>20000&&v<80000)return new Date(Math.round((v-25569)*864e5));
@@ -329,23 +379,43 @@ function parseDian(t){
     grupo:findCol(H,/^grupo$/),divisa:findCol(H,/^divisa$/),
     rIva:findCol(H,/^rete iva$/),rRenta:findCol(H,/^rete renta$/),rIca:findCol(H,/^rete ica$/),
     inc:findCol(H,/^inc$/)};
+  const OTROS=["ICA","IC","Timbre","INC Bolsas","IN Carbono","IN Combustibles","IC Datos","ICL","INPP","IBUA","ICUI"].map(n=>[n,findCol(H,new RegExp("^"+norm(n)+"$"))]).filter(([,c])=>c);
   const need={cufe:"CUFE/CUDE",folio:"Folio",nitE:"NIT Emisor",nitR:"NIT Receptor",total:"Total"};
   const miss=Object.keys(need).filter(k=>!c[k]).map(k=>need[k]);
   if(miss.length)throw new Error("Al archivo DIAN le faltan columnas: "+miss.join(", "));
-  return t.rows.filter(r=>{
+  const rows=t.rows.filter(r=>{
     const tp=norm(r[c.tipo]); return !/application|evento|acuse|reclamo|aceptacion|recibo/.test(tp);
   }).map(r=>{
-    const pref=String(r[c.pref]??"").trim(), fol=String(r[c.folio]??"").trim();
-    const isNC=/credito/.test(norm(r[c.tipo]));
+    const pf=docKey(r[c.pref]); let fl=docKey(r[c.folio]);
+    if(pf&&fl.startsWith(pf))fl=fl.slice(pf.length);   // folio que ya trae el prefijo pegado
+    const tn=norm(r[c.tipo]);
+    const isNC=/credito|ajuste/.test(tn);
     const sign=isNC?-1:1;
-    return {tipo:String(r[c.tipo]??""),cufe:String(r[c.cufe]??""),doc:(pref&&!fol.toUpperCase().startsWith(pref.toUpperCase())?pref:"")+fol,
+    return {tipo:String(r[c.tipo]??""),cufe:String(r[c.cufe]??""),
+      pref:pf,fol:fl,doc:pf+noZeros(fl),keys:[...new Set([pf+fl,pf+noZeros(fl)])],folN:noZeros(fl),
+      isDS:/soporte/.test(tn),prefRaw:String(r[c.pref]??"").trim(),folRaw:String(r[c.folio]??"").trim(),
       fecha:date(r[c.fecha]),nitE:nit(r[c.nitE]),nomE:String(r[c.nomE]??""),nitR:nit(r[c.nitR]),nomR:String(r[c.nomR]??""),
       iva:num(r[c.iva])*sign,total:num(r[c.total])*sign,estado:String(r[c.estado]??""),
       inc:num(r[c.inc])*sign,rete:(num(r[c.rIva])+num(r[c.rRenta])+num(r[c.rIca]))*sign,
       grupo:/emit/i.test(r[c.grupo])?"emi":/recib/i.test(r[c.grupo])?"rec":"",
-      divisa:String(r[c.divisa]??"").trim().toUpperCase()};
+      divisa:String(r[c.divisa]??"").trim().toUpperCase(),
+      otros:OTROS.map(([n,col])=>[n,num(r[col])*sign]).filter(([,v])=>Math.abs(v)>0.004)};
   }).filter(r=>r.doc);
+  // NIT propio: el que aparece en más documentos (como emisor o receptor)
+  const cnt=new Map(); rows.forEach(r=>new Set([r.nitE,r.nitR]).forEach(n=>n&&cnt.set(n,(cnt.get(n)||0)+1)));
+  const top=Math.max(0,...cnt.values()), cand=[...cnt].filter(([,v])=>v===top).map(([n])=>n);
+  const hint=rows.find(r=>r.grupo);
+  ownNit=cand.length===1?cand[0]:hint?(hint.grupo==="rec"?hint.nitR:hint.nitE):(cand[0]||"");
+  rows.forEach(r=>{
+    const yoEmisor=r.nitE===ownNit;
+    r.cpNit=yoEmisor?r.nitR:r.nitE; r.cpNom=yoEmisor?r.nomR:r.nomE;
+    // El documento soporte lo genera la empresa compradora: siempre es una compra,
+    // aunque la DIAN lo liste en "Emitidos" con el NIT propio como emisor.
+    r.flujo=r.isDS?"rec":(r.grupo||(yoEmisor?"emi":"rec"));
+  });
+  return rows;
 }
+let ownNit="";
 
 const LIST_FIELDS=[
   {k:"nit",l:"NIT tercero",req:1,re:/nit|identific|tercero.*(id|doc)|cedula/,not:/nombre|razon/},
@@ -357,11 +427,11 @@ const LIST_FIELDS=[
 ];
 const AUX_FIELDS=[
   {k:"nit",l:"NIT / código tercero",req:1,re:/codigo tercero|nit|identific|cedula/,not:/nombre/},
-  {k:"nombre",l:"Nombre tercero",re:/nombre del tercero|nombre tercero|razon social/},
+  {k:"nombre",l:"Nombre tercero",re:/nombre del tercero|nombre tercero|nombre nit|razon social|^nombre$/},
   {k:"cuenta",l:"Cuenta contable",req:1,re:/^cuenta contable$|codigo cuenta|^cuenta/,not:/nombre/},
   {k:"debito",l:"Débito",req:1,re:/^debito/},
   {k:"credito",l:"Crédito",req:1,re:/^credito/},
-  {k:"tipo",l:"Tipo de documento",req:1,re:/^tipo de documento$|^tipo/,not:/sub/},
+  {k:"tipo",l:"Tipo de documento",re:/^tipo de documento$|^tipo/,not:/sub/},
   {k:"subtipo",l:"Subtipo de documento",re:/sub ?tipo/},
   {k:"numero",l:"Número de documento",req:1,re:/^numero de documento$|^numero|consecutivo/},
   {k:"fecha",l:"Fecha",re:/fecha de documento|^fecha/,not:/traslado/},
@@ -370,12 +440,13 @@ const AUX_FIELDS=[
 ];
 let erpKind="aux", erpMap={}, excluded=null;
 const fields=()=>erpKind==="aux"?AUX_FIELDS:LIST_FIELDS;
+const tipoCol=()=>erpMap.tipo||erpMap.subtipo||"";
 const escH=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function detectKind(h){const n=h.map(norm);return n.some(x=>/^debito/.test(x))&&n.some(x=>/^credito/.test(x))&&n.some(x=>/cuenta/.test(x))?"aux":"list"}
 function buildMap(){
   $("map").innerHTML=fields().map(f=>`<label class="f">${f.l}${f.req?" *":""}<select id="map_${f.k}">
     <option value="">— No usar —</option>${erpHeaders.map(h=>`<option ${erpMap[f.k]===h?"selected":""}>${escH(h)}</option>`).join("")}</select></label>`).join("");
-  fields().forEach(f=>$("map_"+f.k).onchange=e=>{erpMap[f.k]=e.target.value;if(f.k==="tipo"||f.k==="subtipo"){excluded=null;buildTypes()}reconcile()});
+  fields().forEach(f=>$("map_"+f.k).onchange=e=>{erpMap[f.k]=e.target.value;if(f.k==="tipo"||f.k==="subtipo"){excluded=null;buildTypes()}renderTrx();reconcile()});
   $("auxCfg").hidden=erpKind!=="aux"; $("listCfg").hidden=erpKind==="aux";
   $("kindLbl").textContent=erpKind==="aux"?"Auxiliar contable (débito / crédito)":"Listado de facturas";
   buildTypes();
@@ -386,41 +457,47 @@ function autoMap(){ erpMap={}; excluded=null; const used=new Set();
 
 const PAY=/egreso|pago|recibo|ingreso|recaudo|banco|cheque|consign|traslado|cierre|apertura|nomina|depreciac|^ce$|^rc$|^ci$|^nm$/i;
 function buildTypes(){
-  const box=$("types"); if(erpKind!=="aux"||!erpMap.tipo){box.innerHTML="";return}
+  const tc=tipoCol(), box=$("types"); if(erpKind!=="aux"||!tc){box.innerHTML="";return}
   const cnt=new Map();
-  erpRows.forEach(r=>{const t=String(r[erpMap.tipo]??"").trim();if(!t)return;
-    const e=cnt.get(t)||{n:0,sub:erpMap.subtipo?String(r[erpMap.subtipo]??"").trim():""};e.n++;cnt.set(t,e)});
+  // Cada tipo se describe con el subtipo (o, si se agrupa por subtipo, con el prefijo de sus números)
+  erpRows.forEach(r=>{const t=String(r[tc]??"").trim();if(!t)return;
+    const sub=erpMap.tipo&&erpMap.subtipo?String(r[erpMap.subtipo]??"").trim():(erpMap.numero?splitDoc(r[erpMap.numero]).pref:"");
+    const e=cnt.get(t)||{n:0,sub:"",subs:new Set()};e.n++;if(sub)e.subs.add(sub);e.sub=[...e.subs].slice(0,3).join(", ");cnt.set(t,e)});
   if(!excluded)excluded=new Set([...cnt].filter(([t,e])=>PAY.test(t)||PAY.test(e.sub)).map(([t])=>t));
   box.innerHTML=[...cnt].sort((a,b)=>b[1].n-a[1].n).map(([t,e],i)=>`<label class="chk"><input type="checkbox" id="ty_${i}" data-t="${escH(t)}" ${excluded.has(t)?"":"checked"}>
     <b>${escH(t)}</b>${e.sub?` <span>${escH(e.sub)}</span>`:""} <span class="cnt">${e.n}</span></label>`).join("");
-  box.querySelectorAll("input").forEach(c=>c.onchange=()=>{c.checked?excluded.delete(c.dataset.t):excluded.add(c.dataset.t);reconcile()});
+  box.querySelectorAll("input").forEach(c=>c.onchange=()=>{c.checked?excluded.delete(c.dataset.t):excluded.add(c.dataset.t);renderTrx();reconcile()});
 }
 
 /* ---------- conciliación ---------- */
 const tolV=()=>Math.abs(+$("tol").value||0);
 function prepDian(){
   const neto=erpKind==="list"&&$("baseDian").value==="neto";
-  return dianRows.filter(d=>!d.grupo||d.grupo===mode).map(d=>({...d,nit:mode==="rec"?d.nitE:d.nitR,nom:mode==="rec"?d.nomE:d.nomR,
+  return dianRows.filter(d=>d.flujo===mode).map(d=>({...d,nit:d.cpNit,nom:d.cpNom,
     total:neto?d.total-(d.rete||0):d.total}));
 }
 function dNotes(d){
   let o="";
-  if(/credito/.test(norm(d.tipo)))o+="Nota crédito. ";
+  const tn=norm(d.tipo);
+  if(/credito/.test(tn))o+="Nota crédito. ";
+  if(d.isDS&&/ajuste/.test(tn))o+="Nota de ajuste al documento soporte: verificar que disminuya el valor. ";
+  else if(d.isDS)o+="Documento soporte (no obligado a facturar). ";
   if(/rechaz/i.test(d.estado))o+="Documento rechazado por la DIAN: no soporta costo ni IVA descontable. ";
   else if(d.estado&&!/aprob/i.test(d.estado))o+=`Estado DIAN: ${d.estado}. `;
   if(d.divisa&&d.divisa!=="COP")o+=`Factura en ${d.divisa}: revisar TRM aplicada. `;
   if(d.inc)o+=`Incluye INC $${fmt(d.inc)}. `;
+  if(d.otros&&d.otros.length)o+="Incluye "+d.otros.map(([n,v])=>`${n} $${fmt(v)}`).join(", ")+": revisar si el ERP lo registró. ";
   return o;
 }
 function dedupe(dian,out){
   const seen=new Set(),keep=[];
-  for(const d of dian){const k=d.cufe||d.nit+"|"+docKey(d.doc);
+  for(const d of dian){const k=d.cufe||d.nit+"|"+d.doc;
     if(seen.has(k)){out.push(mk("dup",d,null,"Mismo CUFE/número ya listado en el archivo DIAN"));continue}
     seen.add(k);keep.push(d)}
   return keep;
 }
 function compare(d,e,extra){
-  const tol=tolV(), cmp=$("cmpField").value;
+  const tol=tolV(), cmp=$("cmpField").value; extra=(extra||"")+(e.adj||"");
   const dT=e.total-d.total, dI=e.hasIva?e.iva-d.iva:0;
   const badT=cmp!=="iva"&&Math.abs(dT)>tol, badI=cmp!=="total"&&e.hasIva&&Math.abs(dI)>tol;
   let obs=extra||"";
@@ -447,17 +524,21 @@ function reconcileList(out){
   const dian=dedupe(prepDian(),out);
   const erp=new Map();
   for(const r of erpRows){
-    const n=nit(r[erpMap.nit]), d=docKey(r[erpMap.doc]); if(!n||!d)continue;
-    const k=n+"|"+d;
-    const e=erp.get(k)||{nit:n,doc:String(r[erpMap.doc]).trim(),nom:"",fecha:null,total:0,iva:0,lines:0,used:false,hasIva:!!erpMap.iva,comp:""};
+    const n=nit(r[erpMap.nit]), raw=String(r[erpMap.doc]??"").trim(); if(!n||!docKey(raw))continue;
+    const pk=cellKey(raw), k=n+"|"+pk.key;
+    const e=erp.get(k)||{nit:n,doc:raw,keys:pk.keys,fol:pk.fol,nom:"",fecha:null,total:0,iva:0,lines:0,used:false,hasIva:!!erpMap.iva,comp:raw};
     e.total+=num(r[erpMap.total]); if(erpMap.iva)e.iva+=num(r[erpMap.iva]);
     if(erpMap.nombre&&!e.nom)e.nom=String(r[erpMap.nombre]??""); if(erpMap.fecha&&!e.fecha)e.fecha=date(r[erpMap.fecha]);
     e.lines++; erp.set(k,e);
   }
-  const byFolio=new Map(); for(const e of erp.values()){const fk=e.nit+"|"+folioOnly(e.doc);(byFolio.get(fk)||byFolio.set(fk,[]).get(fk)).push(e)}
+  const byKey=new Map(), byFolio=new Map();
+  for(const e of erp.values()){
+    e.keys.forEach(k=>byKey.set(e.nit+"|"+k,e));
+    const fk=e.nit+"|"+e.fol;(byFolio.get(fk)||byFolio.set(fk,[]).get(fk)).push(e)}
   for(const d of dian){
-    let e=erp.get(d.nit+"|"+docKey(d.doc)), how="";
-    if(!e||e.used){const c=(byFolio.get(d.nit+"|"+folioOnly(d.doc))||[]).filter(x=>!x.used);if(c.length===1){e=c[0];how="Cruzada por número sin prefijo. "}else e=null}
+    let e=null, how="";
+    for(const k of d.keys){const x=byKey.get(d.nit+"|"+k); if(x&&!x.used){e=x;break}}
+    if(!e){const c=(byFolio.get(d.nit+"|"+d.folN)||[]).filter(x=>!x.used);if(c.length===1){e=c[0];how="Cruzada solo por folio: el ERP no trae el prefijo "+d.pref+". "}}
     if(!e){out.push(mk("dian",d,null,dNotes(d)+"No está registrada en el ERP"));continue}
     e.used=true;
     out.push(compare(d,e,how+(e.lines>1?`${e.lines} líneas en ERP sumadas. `:"")));
@@ -467,10 +548,11 @@ function reconcileList(out){
 
 function reconcileAux(out){
   const miss=AUX_FIELDS.filter(f=>f.req&&!erpMap[f.k]);
+  if(!tipoCol())miss.push({l:"Tipo o Subtipo de documento"});
   if(miss.length){toast("Asigna en el ERP: "+miss.map(f=>f.l).join(", "));return false}
   const m=erpMap, rec=mode==="rec", tol=tolV(), cmp=$("cmpField").value;
   const pre=id=>$(id).value.split(/[,;\s]+/).map(s=>s.replace(/\D/g,"")).filter(Boolean);
-  const P={cx:pre(rec?"aCxp":"aCxc"),iva:pre("aIva"),ret:pre(rec?"aRetC":"aRetV")};
+  const P={cx:pre(rec?"aCxp":"aCxc"),iva:pre("aIva"),ret:pre(rec?"aRetC":"aRetV"),ant:pre(rec?"aAnt":"aAntV"),asum:rec?pre("aAsum"):[]};
   const has=(c,l)=>l.some(p=>c.startsWith(p));
   const dian=dedupe(prepDian(),out);
   const dN=new Set(dian.map(d=>d.nit));
@@ -480,11 +562,11 @@ function reconcileAux(out){
   // 1. Agrupar líneas por comprobante
   const comps=new Map(); let skipped=0;
   for(const r of erpRows){
-    const tipo=String(r[m.tipo]??"").trim();
+    const tipo=String(r[tipoCol()]??"").trim();
     if(excluded&&excluded.has(tipo)){skipped++;continue}
     const numero=String(r[m.numero]??"").trim(); if(!numero)continue;
     const cta=String(r[m.cuenta]??"").replace(/\D/g,"");
-    const kind=has(cta,P.cx)?"cx":has(cta,P.iva)?"iva":has(cta,P.ret)?"ret":"";
+    const kind=has(cta,P.cx)?"cx":has(cta,P.iva)?"iva":has(cta,P.ret)?"ret":has(cta,P.ant)?"ant":has(cta,P.asum)?"asum":"";
     const ck=tipo+" "+numero;
     (comps.get(ck)||comps.set(ck,[]).get(ck)).push({kind,nit:fixNit(nit(r[m.nit])),nom:String(r[m.nombre]??"").trim(),
       deb:num(r[m.debito]),cred:num(r[m.credito]),fecha:m.fecha?date(r[m.fecha]):null,numero,
@@ -494,27 +576,33 @@ function reconcileAux(out){
   const groups=[];
   for(const [ck,lines] of comps){
     const T=[...new Set(lines.filter(l=>l.kind==="cx").map(l=>l.nit))]; if(!T.length)continue;
-    const G=new Map(T.map(t=>[t,{nit:t,nom:"",comp:ck,numero:lines[0].numero,fecha:null,cx:0,iva:0,ret:0,hasIva:true,txt:new Set()}]));
+    const G=new Map(T.map(t=>[t,{nit:t,nom:"",comp:ck,numero:lines[0].numero,doc:lines[0].numero,fecha:null,cx:0,iva:0,ret:0,ant:0,asum:0,hasIva:true,txt:new Set()}]));
     for(const l of lines){
       const g=G.get(T.length===1?T[0]:l.nit); if(!g)continue;
       if(l.txt)g.txt.add(String(l.txt)); if(!g.fecha&&l.fecha)g.fecha=l.fecha;
       if(l.kind==="cx"){g.cx+=rec?l.cred-l.deb:l.deb-l.cred; if(!g.nom)g.nom=l.nom}
       else if(l.kind==="iva")g.iva+=rec?l.deb-l.cred:l.cred-l.deb;
       else if(l.kind==="ret")g.ret+=rec?l.cred-l.deb:l.deb-l.cred;
+      else if(l.kind==="ant")g.ant+=rec?l.cred-l.deb:l.deb-l.cred;   // anticipo que se cruza contra la factura
+      else if(l.kind==="asum")g.asum+=l.deb-l.cred;                   // retención asumida: no hace parte del documento
     }
-    for(const g of G.values()){g.total=g.cx+g.ret;g.text=[...g.txt].join(" · ");if(Math.abs(g.total)>0.5)groups.push(g)}
+    for(const g of G.values()){g.total=g.cx+g.ret+g.ant-g.asum;
+      g.adj=(Math.abs(g.ant)>0.5?`Incluye anticipo aplicado $${fmt(g.ant)}. `:"")+(Math.abs(g.asum)>0.5?`Descuenta impuestos asumidos $${fmt(g.asum)}. `:"");g.text=[...g.txt].join(" · ");if(Math.abs(g.total)>0.5)groups.push(g)}
   }
   // 3. Cruce: NIT + número de factura encontrado en el detalle o la descripción
   const byNit=new Map(); dian.forEach(d=>(byNit.get(d.nit)||byNit.set(d.nit,[]).get(d.nit)).push(d));
   const used=new Set();
-  const tokens=s=>new Set(String(s).toUpperCase().split(/[^A-Z0-9]+/).map(t=>{const x=t.match(/^[A-Z]*0*(\d+)$/);return x?x[1]:null}).filter(Boolean));
-  const findIn=(g,src)=>{ if(!src)return[]; const k=docKey(src), tk=tokens(src);
-    return (byNit.get(g.nit)||[]).filter(d=>{const dk=docKey(d.doc);
-      return !used.has(d)&&((/[A-Z]/.test(dk)&&dk.length>=3&&k.includes(dk))||tk.has(folioOnly(d.doc)))}); };
+  const findIn=(g,src,strong)=>{ if(!src)return[]; const z=scan(src);
+    return (byNit.get(g.nit)||[]).filter(d=>!used.has(d)&&(strong
+      ? d.keys.some(k=>z.keys.has(k)||(/[A-Z]/.test(k)&&k.length>=4&&z.compact.includes(k)))
+      : z.fols.has(d.folN))); };
   const pending=[];
   for(const g of groups){
-    let c=findIn(g,g.text), via="";
-    if(!c.length){c=findIn(g,g.numero);if(c.length)via="Número tomado del consecutivo del comprobante. "}
+    // 1) Prefijo+folio en el número de documento · 2) en el detalle · 3) solo folio en el detalle · 4) solo folio en el número
+    let c=findIn(g,g.numero,true), via="";
+    if(!c.length)c=findIn(g,g.text,true);
+    if(!c.length){c=findIn(g,g.text,false);if(c.length)via="Cruzada solo por folio: el detalle del ERP no trae el prefijo. "}
+    if(!c.length){c=findIn(g,g.numero,false);if(c.length)via="Folio tomado del número del comprobante, sin prefijo. Verificar. "}
     if(!c.length){pending.push(g);continue}
     c.forEach(d=>used.add(d));
     if(c.length===1){out.push(compare(c[0],g,via));continue}
@@ -535,7 +623,8 @@ function reconcileAux(out){
   $("auxInfo").textContent=`${groups.length} comprobantes con cuenta por ${rec?"pagar":"cobrar"} reconstruidos · ${skipped} líneas excluidas por tipo de documento.`;
 }
 function mk(st,d,e,obs){
-  return {st,nit:(d||e).nit,nom:(d&&d.nom)||(e&&e.nom)||"",doc:d?d.doc:(e.doc||"—"),comp:(e&&e.comp)||"",fD:d&&d.fecha,fE:e&&e.fecha,
+  return {st,nit:(d||e).nit,nom:(d&&d.nom)||(e&&e.nom)||"",doc:d?d.doc:"—",pref:d?d.prefRaw:"",fol:d?d.folRaw:"",
+    comp:(e&&e.comp)||"",fD:d&&d.fecha,fE:e&&e.fecha,
     tD:d?d.total:null,tE:e?e.total:null,iD:d?d.iva:null,iE:e&&e.hasIva?e.iva:null,obs};
 }
 
@@ -566,7 +655,7 @@ function view(q){return results.filter(r=>(filter==="all"||r.st===filter)&&(!q||
 /* ---------- eventos ---------- */
 function setMode(m){mode=m;$("mRec").setAttribute("aria-pressed",m==="rec");$("mEmi").setAttribute("aria-pressed",m==="emi");reconcile()}
 $("mRec").onclick=()=>setMode("rec");$("mEmi").onclick=()=>setMode("emi");
-["aCxp","aCxc","aIva","aRetC","aRetV"].forEach(id=>$(id).onchange=reconcile);
+["aCxp","aCxc","aIva","aRetC","aRetV","aAnt","aAntV","aAsum"].forEach(id=>$(id).onchange=reconcile);
 $("run").onclick=runClick;$("baseDian").onchange=reconcile;$("q").oninput=render;$("tol").onchange=reconcile;$("cmpField").onchange=reconcile;
 
 function wireDrop(zone,input,handler){
@@ -580,7 +669,7 @@ wireDrop($("dDian"),$("iDian"),async f=>{
   try{const t=sheetToTable(await readFile(f),r=>r.some(c=>/cufe|cude/.test(c))?10+r.filter(Boolean).length:0);
     if(!t)throw new Error("No se encontró la columna CUFE/CUDE. Verifica que sea el Excel exportado de la DIAN.");
     dianRows=parseDian(t);
-    const nE=dianRows.filter(d=>d.grupo==="emi").length,nR=dianRows.filter(d=>d.grupo==="rec").length;
+    const nE=dianRows.filter(d=>d.flujo==="emi").length,nR=dianRows.filter(d=>d.flujo==="rec").length;
     if(nE||nR){mode=nE>nR?"emi":"rec";$("mRec").setAttribute("aria-pressed",mode==="rec");$("mEmi").setAttribute("aria-pressed",mode==="emi")}$("fDian").textContent=`${f.name} · ${dianRows.length} documentos`;$("fDian").classList.add("loaded");
     filesChanged();}catch(err){toast(err.message)}
 });
@@ -593,7 +682,7 @@ wireDrop($("dErp"),$("iErp"),async f=>{
 
 $("copy").onclick=async()=>{
   const rows=view(norm($("q").value));
-  const head=["Estado","NIT","Tercero","Factura","Comprobante ERP","Fecha DIAN","Fecha ERP","Total DIAN","Total ERP","Dif total","IVA DIAN","IVA ERP","Dif IVA","Observación"];
+  const head=["Estado","NIT","Tercero","Factura DIAN","Documento ERP","Fecha DIAN","Fecha ERP","Total DIAN","Total ERP","Dif total","IVA DIAN","IVA ERP","Dif IVA","Observación"];
   const tsv=[head,...rows.map(r=>[STATES[r.st].l,r.nit,r.nom,r.doc,r.comp,fmtD(r.fD),fmtD(r.fE),r.tD??"",r.tE??"",
     r.tD!=null&&r.tE!=null?r.tE-r.tD:"",r.iD??"",r.iE??"",r.iD!=null&&r.iE!=null?r.iE-r.iD:"",r.obs])].map(a=>a.join("\t")).join("\n");
   try{await navigator.clipboard.writeText(tsv);toast(`${rows.length} filas copiadas. Pégalas en Excel.`)}
@@ -601,9 +690,59 @@ $("copy").onclick=async()=>{
 };
 let tt;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3500)}
 
+/* ---------- vista previa de la transformación Prefijo + Folio ---------- */
+function erpNumbers(){
+  // Valores del ERP que se comparan contra la DIAN: N.º factura (listado) o Número de documento (auxiliar)
+  const col=erpKind==="aux"?erpMap.numero:erpMap.doc; if(!col)return[];
+  const seen=new Map();
+  for(const r of erpRows){
+    const tipo=erpKind==="aux"?String(r[tipoCol()]??"").trim():"";
+    if(erpKind==="aux"&&excluded&&excluded.has(tipo))continue;
+    const raw=String(r[col]??"").trim(); if(!raw)continue;
+    const id=tipo+"|"+raw, e=seen.get(id)||{raw,tipo,txt:new Set()};
+    if(erpKind==="aux")[erpMap.detalle,erpMap.descripcion].forEach(c=>{const v=c&&String(r[c]??"").trim();if(v)e.txt.add(v)});
+    seen.set(id,e);
+  }
+  return [...seen.values()].map(e=>({...e,txt:[...e.txt].join(" · ")}));
+}
+function renderTrx(){
+  const w=$("trxWrap"); if(!erpRows){w.hidden=true;return}
+  w.hidden=false;
+  const col=erpKind==="aux"?erpMap.numero:erpMap.doc;
+  $("trxErpT").textContent=`Números del ERP · columna ${col||"sin asignar"}`;
+  const nums=erpNumbers(), dK=new Map(), dF=new Map();
+  (dianRows||[]).forEach(d=>{d.keys.forEach(k=>dK.set(k,d));(dF.get(d.folN)||dF.set(d.folN,[]).get(d.folN)).push(d)});
+  const eK=new Set(), eF=new Set();
+  const rowsE=nums.map(n=>{
+    let p=cellKey(n.raw), via="Número";
+    let hit=p.keys.map(k=>dK.get(k)).find(Boolean);
+    if(!hit&&n.txt){ // en el auxiliar, el número del proveedor suele estar en el detalle
+      const z=scan(n.txt), k=[...z.keys].find(k=>dK.has(k));
+      z.keys.forEach(k=>eK.add(k)); z.fols.forEach(f=>eF.add(f));
+      if(k){const q=splitDoc(k);p={key:k,pref:q.pref,fol:q.fol,keys:[k]};hit=dK.get(k);via="Detalle"}
+      else{const f=[...z.fols].find(f=>dF.has(f));if(f&&!dF.has(p.fol)){p={key:f,pref:"",fol:f,keys:[f]};via="Detalle"}}
+    }
+    p.keys.forEach(k=>eK.add(k)); eF.add(p.fol);
+    const st=!dianRows?"":hit?"ok":dF.has(p.fol)?"fol":"no";
+    return {...n,p,key:p.key,st,hit,via};});
+  const ord={no:0,fol:1,ok:2,"":3}; rowsE.sort((a,b)=>ord[a.st]-ord[b.st]);
+  const lbl={ok:'<span class="m-ok">Sí</span>',fol:'<span class="m-fol">Solo folio</span>',no:'<span class="m-no">No</span>',"":"—"};
+  $("trxErp").innerHTML=rowsE.slice(0,60).map(r=>`<tr><td class="mono">${escH((r.tipo?r.tipo+" ":"")+r.raw)}${r.via==="Detalle"?`<div class="tr-sub">${escH(r.txt.slice(0,60))}</div>`:""}</td><td>${r.st?r.via:"—"}</td><td class="mono">${escH(r.p.pref||"—")}</td><td class="mono">${escH(r.p.fol)}</td><td class="mono"><b>${escH(r.key)}</b></td><td>${lbl[r.st]}</td></tr>`).join("")
+    ||`<tr><td colspan="6" class="note">Asigna la columna del número de documento.</td></tr>`;
+  const rowsD=(dianRows||[]).map(d=>({d,st:d.keys.some(k=>eK.has(k))?"ok":eF.has(d.folN)?"fol":"no"}));
+  rowsD.sort((a,b)=>ord[a.st]-ord[b.st]);
+  $("trxDian").innerHTML=dianRows?rowsD.slice(0,60).map(({d,st})=>`<tr><td class="mono">${escH(d.prefRaw||"—")}</td><td class="mono">${escH(d.folRaw)}</td><td class="mono"><b>${escH(d.doc)}</b></td><td class="tr-ter" title="${escH(d.cpNom)}">${escH(d.cpNom)}</td><td>${lbl[erpRows?st:""]}</td></tr>`).join("")
+    :`<tr><td colspan="5" class="note">Carga el archivo DIAN.</td></tr>`;
+  const c=k=>rowsE.filter(r=>r.st===k).length;
+  $("trxSum").textContent=dianRows?`${nums.length} ${erpKind==="aux"?"comprobantes":"números"} del ERP: ${c("ok")} con prefijo y folio iguales a la DIAN · ${c("fol")} solo por folio · ${c("no")} sin pareja.`:"";
+}
+$("trxBtn").onclick=()=>{const pnl=$("trxPanel"),open=pnl.hidden;pnl.hidden=!open;$("trxBtn").setAttribute("aria-expanded",open);
+  $("trxBtn").innerHTML=open?'<i class="fas fa-eye-slash"></i> Ocultar transformación':'<i class="fas fa-exchange-alt"></i> Ver transformación de números'};
+
 /* ---------- flujo del botón Conciliar ---------- */
 function filesChanged(){
   const both=!!(dianRows&&erpRows);
+  renderTrx();
   hasRun=false; results=[];
   $("resWrap").hidden=true; $("resTools").hidden=true; $("emptyRes").hidden=false;
   $("run").disabled=!both;
@@ -650,7 +789,7 @@ $("xls").onclick=()=>{
   const rows=view(norm($("q").value));
   if(!rows.length){toast("No hay filas para descargar en este filtro.");return}
   const dif=(a,b)=>a!=null&&b!=null?b-a:null;
-  const det=rows.map(r=>({"Estado":STATES[r.st].l,"NIT":r.nit,"Tercero":r.nom,"Factura":r.doc,"Comprobante ERP":r.comp,
+  const det=rows.map(r=>({"Estado":STATES[r.st].l,"NIT":r.nit,"Tercero":r.nom,"Prefijo DIAN":r.pref,"Folio DIAN":r.fol,"Llave de cruce":r.doc,"Documento ERP":r.comp,
     "Fecha DIAN":fmtD(r.fD),"Fecha ERP":fmtD(r.fE),"Total DIAN":r.tD,"Total ERP":r.tE,"Dif. total":dif(r.tD,r.tE),
     "IVA DIAN":r.iD,"IVA ERP":r.iE,"Dif. IVA":dif(r.iD,r.iE),"Observación":r.obs}));
   const res=Object.keys(STATES).map(k=>{const rs=results.filter(r=>r.st===k);
@@ -658,7 +797,7 @@ $("xls").onclick=()=>{
   const wb=XLSX.utils.book_new();
   const w1=XLSX.utils.json_to_sheet(res), w2=XLSX.utils.json_to_sheet(det);
   w1["!cols"]=[{wch:22},{wch:12},{wch:16}];
-  w2["!cols"]=[{wch:20},{wch:12},{wch:34},{wch:12},{wch:14},{wch:11},{wch:11},{wch:14},{wch:14},{wch:12},{wch:12},{wch:12},{wch:10},{wch:60}];
+  w2["!cols"]=[{wch:20},{wch:12},{wch:34},{wch:9},{wch:10},{wch:12},{wch:18},{wch:11},{wch:11},{wch:14},{wch:14},{wch:12},{wch:12},{wch:12},{wch:10},{wch:60}];
   XLSX.utils.book_append_sheet(wb,w1,"Resumen");
   XLSX.utils.book_append_sheet(wb,w2,"Detalle");
   XLSX.writeFile(wb,`conciliacion-dian-${mode==="rec"?"compras":"ventas"}-${new Date().toISOString().slice(0,10)}.xlsx`);
